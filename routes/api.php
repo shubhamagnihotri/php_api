@@ -21,4 +21,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::group(['prefix' =>'v1'], function () {
     Route::get('my_detail','API\UserController@getuser');
+
+    Route::post('generate_otp','API\OnboardingController@generateOtp');
+    Route::post('validate_otp','API\OnboardingController@validateOtp');
 });
