@@ -21,5 +21,6 @@ class Otp extends Model
     protected $hidden = [];
     protected $primaryKey = 'id';
     protected $table = 'otps';
+    public $timestamps = true;
 
 }
