@@ -31,6 +31,17 @@ class OnboardingController extends Controller
        return response()->json($response);
     }
 
+    
+    // forget password otp 
+    public function forgetPassword(Request $request){
+        $isValidationFailed=$this->validationServiceObject->validateGenerateOtp($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+       $response = $this->businessLogicServiceObject->forgetPassword($request->all());
+       return response()->json($response);
+    }
+
     // validate email otp 
     public function validateOtp(Request $request){
         $isValidationFailed=$this->validationServiceObject->validateEmailOtp($request->all());
@@ -42,7 +53,7 @@ class OnboardingController extends Controller
     }
 
     
-    // generatePassword
+    // Generate Password
     public function generatePassword(Request $request){
       
         $isValidationFailed=$this->validationServiceObject->validatePassword($request->all());
@@ -67,6 +78,29 @@ class OnboardingController extends Controller
         return Helper::constructResponse(false,'Password set successfully !',200,$userData);
     }
 
+    // update forget password
+    public function updateForgetPassword(Request $request){
+        $isValidationFailed=$this->validationServiceObject->validatePassword($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->updateForgetPassword($request->all());
+        if($response['error'] == true){
+            return response()->json($response);
+        }
+        $validator = Validator::make($request->all(), [
+            'email' => 'required',
+            'password' => 'required',
+        ]); 
+        $token = auth()->attempt($validator->validated());
+        $userData = $this->createNewToken($token)->original;
+        
+        $this->businessLogicServiceObject->updateSessionModel($userData['access_token'], $userData['user']->id);
+        $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);
+        $userData['user']->role = $role;
+        return Helper::constructResponse(false,'Password set successfully !',200,$userData);
+
+    }    
     /**
      * Get a JWT via given credentials.
      *
@@ -82,7 +116,7 @@ class OnboardingController extends Controller
             return Helper::constructResponse(true,'validation error',400,$validator->errors());
         }
         if (! $token = auth()->attempt($validator->validated())) {
-            return Helper::constructResponse(true,'Password not matched successfully',402,$userData);
+            return Helper::constructResponse(true,'Password not matched successfully',402,[]);
             
         }
         if(auth()->user()->signup_type == '1'){
@@ -173,7 +207,6 @@ class OnboardingController extends Controller
         if(auth()->user()->signup_type == '0'){
             return Helper::constructResponse(false,'Please login with normal login !',401,[]);
         }
-       
         $userData = $this->createNewToken($token)->original;
         $this->businessLogicServiceObject->updateSessionModel($userData['access_token'],$userData['user']->id);
         $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);

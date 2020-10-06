@@ -41,6 +41,7 @@ Route::group(['middleware' => ['auth:api','verify.authUser']], function(){
     Route::post('social_media_signUp','API\OnboardingController@socialMediaSignUp');
     Route::post('social_media_login','API\OnboardingController@socialMediaLogin');
     Route::post('forget_password','API\OnboardingController@forgetPassword');
+    Route::post('update_forget_password','API\OnboardingController@updateForgetPassword');
 
     
 Route::group(['middleware' => ['verify.authUser']], function(){

@@ -39,6 +39,34 @@ class BusinessLogicService
         }
     }
 
+    public function forgetPassword($formData)
+    {
+        $isUserSignedUp=User::where('email',$formData['email'])->first();
+        if(!$isUserSignedUp){
+            return Helper::constructResponse(true,'Sign up not done',401,[]);
+        }
+        if($isUserSignedUp->signup_type == '1'){
+            return Helper::constructResponse(true,'Forget password is not possible !Please login with google',401,[]);
+        }   
+        if($isUserSignedUp->signup_type == '2'){
+            return Helper::constructResponse(true,'Forget password is not possible !Please login with facebook',401,[]);
+        }
+        $bytes = random_bytes(50);
+        $temp_token= bin2hex($bytes);
+        $otpGenearted = Otp::insert([
+            'email'=>$formData['email'],
+            'email_otp'=>mt_rand(100000,999999),
+            'temp_token'=>$temp_token,
+            'status'=>1,
+            'created_at'=>Carbon::now()
+        ]);
+        if($otpGenearted ){
+            return Helper::constructResponse(false,'Otp generated successfully !',200,[]);
+        }else{
+            return Helper::constructResponse(true,'Otp not generated !',401,[]);
+        }
+    }
+
 
 
     public function validateOtp($formData)
@@ -73,6 +101,7 @@ class BusinessLogicService
         if(!$userOtpDetail || $userOtpDetail['temp_token'] != $formData['temp_token']){
             return Helper::constructResponse(true,'Wrong detail',401,[]);
         }
+        $userOtpDetail->delete();
         $usermodel = new User();
         $usermodel->email = $formData['email'];
         $usermodel->password = bcrypt($formData['password']);
@@ -88,6 +117,37 @@ class BusinessLogicService
         }
         
     }
+
+     // generatePassword
+     public function updateForgetPassword($formData)
+     {
+        
+         $isUserSignedUp=User::where('email',$formData['email'])->first();
+         if(!$isUserSignedUp){
+             return Helper::constructResponse(true,'Sign up not done',401,[]);
+         }
+         if($isUserSignedUp->signup_type == '1'){
+            return Helper::constructResponse(true,'Update password is not possible! Please login with google',401,[]);
+        }   
+        if($isUserSignedUp->signup_type == '2'){
+            return Helper::constructResponse(true,'Update password is not possible! Please login with facebook',401,[]);
+        }
+         $userOtpDetail=Otp::where('email',$formData['email'])->orderBy('id','desc')->first();
+         if(!$userOtpDetail || $userOtpDetail['temp_token'] != $formData['temp_token']){
+             return Helper::constructResponse(true,'Wrong detail',401,[]);
+         }
+         $userOtpDetail->delete();
+         
+         $usermodel = User::where('email',$formData['email'])->first();
+         $usermodel->password = bcrypt($formData['password']);
+         $usermodel->save();
+         if($usermodel){
+             return Helper::constructResponse(false,'Password changed successfully',200,$usermodel);
+         }else{
+             return Helper::constructResponse(true,'Password changed not successfully',401,[]);
+         }
+         
+     }
 
     public function socialMediaSignUp($formData)
     {
