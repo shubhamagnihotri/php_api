@@ -28,6 +28,8 @@ class CreateUsersTable extends Migration
             $table->longText('password_reset_token')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->longText('password');
+            $table->tinyInteger('signup_type')->default(0)->comment('0=email,1=google,2=facebook');
+            $table->string('social_media_id')->nullable();
             $table->tinyInteger('profile_status')->default(0);
             $table->rememberToken();
             $table->timestamps();

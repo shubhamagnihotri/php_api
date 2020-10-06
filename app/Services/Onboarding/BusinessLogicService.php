@@ -89,6 +89,31 @@ class BusinessLogicService
         
     }
 
+    public function socialMediaSignUp($formData)
+    {
+        $isUserSignedUp=User::where('email',$formData['email'])->orWhere('social_media_id',$formData['social_media_id'])->first();
+        if($isUserSignedUp){
+            return Helper::constructResponse(true,'Signup already done',401,[]);
+        }
+        $usermodel = new User();
+        $usermodel->email = $formData['email'];
+        $usermodel->fname = $formData['fname'];
+        $usermodel->lname = $formData['lname'];
+        $usermodel->signup_type = $formData['social_media_type'];
+        $usermodel->password = bcrypt($formData['social_media_id']);
+        $usermodel->social_media_id = $formData['social_media_id'];
+        $usermodel->save();
+        if($usermodel){
+            UserRole::insert([
+                'user_id'=>$usermodel->id,
+                'role_id'=>2
+            ]);
+            return Helper::constructResponse(false,'',200,$usermodel);
+        }else{
+            return Helper::constructResponse(true,'Sign up not done successfully',401,[]);
+        }
+    }
+
     // update session model
     public function updateSessionModel($token,$userId)
     {

@@ -155,6 +155,35 @@ class ValidationService
         return false;
     }
 
+    
+    /**
+     * validate login
+     * @return json
+    */
+    public function validateSocialMediaSignUp($formData)
+    {
+        $validation['rules'] = [
+            'fname' => ['required'],
+            'email'=>['required','email'],
+            'social_media_type' => ['required'],
+            'social_media_id' => ['required'],
+        ];
+        $validation['messages'] = [
+            'fname.required' => 'First name is required',
+            'email.required' => 'Email is required',
+            'email.email' => 'Email should be valid email address',
+            'social_media_type.required'=>'Social media known platfrom required',
+            'social_media_id.required'=>'Social media known platfrom required',
+        ];
+        
+        $validation = Validator::make($formData, $validation['rules'], $validation['messages']);
+        if ($validation->fails()) {
+            $apiResponse = $validation->errors();
+            return Helper::constructResponse(true,'validation error',400,$apiResponse);
+        }
+        return false;
+    }
+
 
 
 }

@@ -85,6 +85,14 @@ class OnboardingController extends Controller
             return Helper::constructResponse(true,'Password not matched successfully',402,$userData);
             
         }
+        if(auth()->user()->signup_type == '1'){
+            return Helper::constructResponse(false,'Please login with gmail !',401,[]);
+
+        }
+        if(auth()->user()->signup_type == '2'){
+            return Helper::constructResponse(false,'Please login with facebook !',401,[]);
+        }
+     
         $userData = $this->createNewToken($token)->original;
         $this->businessLogicServiceObject->updateSessionModel($userData['access_token'],$userData['user']->id);
         $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);
@@ -110,6 +118,68 @@ class OnboardingController extends Controller
         $user->role = $role;
         $response['data'] = $user;
         return response()->json($response);
+    }
+
+    // google signup
+    public function socialMediaSignUp(Request $request){
+        $isValidationFailed=$this->validationServiceObject->validateSocialMediaSignUp($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response=$this->businessLogicServiceObject->socialMediaSignUp($request->all());
+        if($response['error'] == true){
+            return response()->json($response);
+        }
+        $request->request->add(['password'=>$request->input('social_media_id')]);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required',
+            'password' => 'required',
+        ]); 
+        $token = auth()->attempt($validator->validated());
+        $userData = $this->createNewToken($token)->original;
+        
+        $this->businessLogicServiceObject->updateSessionModel($userData['access_token'], $userData['user']->id);
+        $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);
+        $userData['user']->role = $role;
+        return Helper::constructResponse(false,'Signup done successfully !',200,$userData);
+    }
+
+    public function socialMediaLogin(Request $request)
+    {
+      
+      
+        $userDetail = User::where('social_media_id',$request->input('social_media_id'))->first();
+       
+        if(!$userDetail){
+            return Helper::constructResponse(true,'Signup not done',401,[]);
+        }
+        $request->request->add(['email'=>$userDetail->email]); 
+        $request->request->add(['password'=>$request->input('social_media_id')]);
+        $validator = Validator::make($request->all(), [
+            'social_media_id'=>'required',
+            // 'social_email'=>'required',
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+      
+        if ($validator->fails()) {
+            return Helper::constructResponse(true,'validation error',400,$validator->errors());
+        }
+
+        if (! $token = auth()->attempt($validator->validated())) {
+            return Helper::constructResponse(true,'Login not successfullly',402,$userData);    
+        }
+
+        if(auth()->user()->signup_type == '0'){
+            return Helper::constructResponse(false,'Please login with normal login !',401,[]);
+        }
+       
+        $userData = $this->createNewToken($token)->original;
+        $this->businessLogicServiceObject->updateSessionModel($userData['access_token'],$userData['user']->id);
+        $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);
+        $userData['user']->role = $role;
+        return Helper::constructResponse(false,'Login successfully !',200,$userData);
+      
     }
 
     /**
