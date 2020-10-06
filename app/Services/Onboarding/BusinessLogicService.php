@@ -9,7 +9,7 @@ use App\Models\UserSession;
 use App\Helpers\CustomHelper as Helper;
 use Carbon\Carbon;
 use Hash;
-
+use Mail;
 
 class BusinessLogicService
 {
@@ -19,20 +19,29 @@ class BusinessLogicService
 
     public function generateOtp($formData)
     {
+       
+      
         $isUserSignedUp=User::where('email',$formData['email'])->first();
         if($isUserSignedUp){
             return Helper::constructResponse(true,'Sign up already done',401,[]);
         }
         $bytes = random_bytes(50);
         $temp_token= bin2hex($bytes);
+        $otp = mt_rand(100000,999999);
         $otpGenearted = Otp::insert([
             'email'=>$formData['email'],
-            'email_otp'=>mt_rand(100000,999999),
+            'email_otp'=> $otp ,
             'temp_token'=>$temp_token,
             'status'=>1,
             'created_at'=>Carbon::now()
         ]);
         if($otpGenearted ){
+            $data = array('name'=>'','toName'=>"",'toEmail'=>$formData['email'],'otp'=>$otp,'subject'=>'One Time Otp for email verification','fromEmail'=>config("app.imap_hostname"),'fromName'=>config("app.imap_hostfromname")); 
+            Mail::send('mails.mail', $data, function($message) use ($data) {
+            
+                $message->to($data['toEmail'], $data['toName'])->subject($data['subject']);
+                $message->from($data['fromEmail'],$data['fromName']);
+            });
             return Helper::constructResponse(false,'Otp generated successfully !',200,[]);
         }else{
             return Helper::constructResponse(true,'Otp not generated !',401,[]);
@@ -53,14 +62,21 @@ class BusinessLogicService
         }
         $bytes = random_bytes(50);
         $temp_token= bin2hex($bytes);
+        $otp = mt_rand(100000,999999);
         $otpGenearted = Otp::insert([
             'email'=>$formData['email'],
-            'email_otp'=>mt_rand(100000,999999),
+            'email_otp'=>$otp,
             'temp_token'=>$temp_token,
             'status'=>1,
             'created_at'=>Carbon::now()
         ]);
         if($otpGenearted ){
+            $data = array('name'=>$isUserSignedUp['fname']." ".$isUserSignedUp['lname'],'toName'=>$isUserSignedUp['fname']." ".$isUserSignedUp['lname'],'toEmail'=>$formData['email'],'otp'=>$otp,'subject'=>'One Time Otp for change password verification','fromEmail'=>config("app.imap_hostname"),'fromName'=>config("app.imap_hostfromname")); 
+            Mail::send('mails.mail', $data, function($message) use ($data) {
+            
+                $message->to($data['toEmail'], $data['toName'])->subject($data['subject']);
+                $message->from($data['fromEmail'],$data['fromName']);
+            });
             return Helper::constructResponse(false,'Otp generated successfully !',200,[]);
         }else{
             return Helper::constructResponse(true,'Otp not generated !',401,[]);
