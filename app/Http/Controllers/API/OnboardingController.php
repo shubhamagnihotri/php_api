@@ -9,6 +9,8 @@ use App\Services\Onboarding\BusinessLogicService;
 use App\Services\Onboarding\ValidationService;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Country;
+use App\Models\CountryState;
 
 use Validator;
 class OnboardingController extends Controller
@@ -23,12 +25,26 @@ class OnboardingController extends Controller
 
     // gnerate email otp 
     public function generateOtp(Request $request){
+
         $isValidationFailed=$this->validationServiceObject->validateGenerateOtp($request->all());
         if ($isValidationFailed) {
             return response()->json($isValidationFailed, 400);
         }
        $response = $this->businessLogicServiceObject->generateOtp($request->all());
        return response()->json($response);
+    }
+    public function getEthnicity(Request $request){
+        $a = config('app-config.ethnicity');
+        return Helper::constructResponse(false,'',200,$a);
+    }
+
+    public function getCountries(Request $request){
+        $a = Country::all();
+        return Helper::constructResponse(false,'',200,$a);
+    }
+    public function getCountriesStates(Request $request){
+        $a = CountryState::where('country_id',$request->input('country_id'))->get();
+        return Helper::constructResponse(false,'',200,$a);
     }
 
     
@@ -116,7 +132,7 @@ class OnboardingController extends Controller
             return Helper::constructResponse(true,'validation error',400,$validator->errors());
         }
         if (! $token = auth()->attempt($validator->validated())) {
-            return Helper::constructResponse(true,'Password not matched successfully',402,[]);
+            return Helper::constructResponse(true,'Please enter valid credentials',402,[]);
             
         }
         if(auth()->user()->signup_type == '1'){
@@ -131,7 +147,7 @@ class OnboardingController extends Controller
         $this->businessLogicServiceObject->updateSessionModel($userData['access_token'],$userData['user']->id);
         $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);
         $userData['user']->role = $role;
-        return Helper::constructResponse(false,'Password set successfully !',200,$userData);
+        return Helper::constructResponse(false,'Login successfully !',200,$userData);
       
     }
 

@@ -232,6 +232,7 @@ class BusinessLogicService
             'state'=>$formData['state'],
             'country'=>$formData['country'],
             'zip_code'=>$formData['zip_code'],
+            'date_of_birth'=>date('Y-m-d',strtotime($formData['date_of_birth'])),
             'profile_status'=>1
         ];
         $userSignUp=User::where('id',$userDetail->id)->update($updatedData);

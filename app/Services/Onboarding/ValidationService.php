@@ -18,10 +18,11 @@ class ValidationService
     public function validateGenerateOtp($formData)
     {
         $validation['rules'] = [
-            'email' => ['required'],
+            'email' => ['required','email'],
         ];
         $validation['messages'] = [
             'email.required' => 'Email is required',
+            'email.email' => 'Email should be valid email address',
         ];
         
         $validation = Validator::make($formData, $validation['rules'], $validation['messages']);
@@ -78,6 +79,7 @@ class ValidationService
             'state' => ['required'],
             'country' => ['required'],
             'zip_code' => ['required'],
+            'date_of_birth' => ['required','date_format:d-m-Y'],
         ];
         $validation['messages'] = [
             'fname.required' => 'First Name is required',
@@ -91,6 +93,8 @@ class ValidationService
             'state.required' => 'Address is required',
             'country.required' => 'Country is required',
             'zip_code.required' => 'Zip Code is required',
+            'date_of_birth.required' => 'Date of birth is required',
+            'date_of_birth.date_format' => 'Date of birth format should be d-m-Y',
         ];
         
         $validation = Validator::make($formData, $validation['rules'], $validation['messages']);

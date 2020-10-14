@@ -42,7 +42,9 @@ Route::group(['middleware' => ['auth:api','verify.authUser']], function(){
     Route::post('social_media_login','API\OnboardingController@socialMediaLogin');
     Route::post('forget_password','API\OnboardingController@forgetPassword');
     Route::post('update_forget_password','API\OnboardingController@updateForgetPassword');
-
+    Route::get('get_ethnicity','API\OnboardingController@getEthnicity');
+    Route::get('get_countries','API\OnboardingController@getCountries');
+    Route::post('get_countries_states','API\OnboardingController@getCountriesStates');
     
 Route::group(['middleware' => ['verify.authUser']], function(){
     Route::post('update_profile','API\OnboardingController@updateProfile');
