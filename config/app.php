@@ -120,6 +120,7 @@ return [
     */
     'imap_hostname'=> env('MAIL_USERNAME'),
     'imap_hostfromname'=> env('MAIL_FROM_NAME'),
+    'aws_bucket_base_url'=> env('AWS_BUCKET_BASE_URL'),
     'key' => env('APP_KEY'),
 
     'cipher' => 'AES-256-CBC',

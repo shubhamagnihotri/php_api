@@ -29,6 +29,7 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->longText('password');
             $table->date('date_of_birth')->nullable();
+            $table->string('profile_image')->nullable();
             $table->tinyInteger('signup_type')->default(0)->comment('0=email,1=google,2=facebook');
             $table->string('social_media_id')->nullable();
             $table->tinyInteger('profile_status')->default(0);

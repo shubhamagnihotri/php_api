@@ -10,7 +10,7 @@ use App\Helpers\CustomHelper as Helper;
 use Carbon\Carbon;
 use Hash;
 use Mail;
-
+use Illuminate\Support\Facades\Storage;
 class BusinessLogicService
 {
     public function __construct()
@@ -221,13 +221,14 @@ class BusinessLogicService
     // do registration
     public function updateProfile($formData,$userDetail)
     {
+       
         $updatedData = [
             'fname'=>$formData['fname'],
             'lname'=>$formData['lname'],
             // 'email'=>$formData['email'],
             'ethinicity'=>$formData['ethinicity'],
             'gender'=>$formData['gender'],
-            'mobile_number'=>$formData['mobile_number'],
+            // 'mobile_number'=>$formData['mobile_number'],
             'address'=>$formData['address'],
             'state'=>$formData['state'],
             'country'=>$formData['country'],
@@ -235,6 +236,12 @@ class BusinessLogicService
             'date_of_birth'=>date('Y-m-d',strtotime($formData['date_of_birth'])),
             'profile_status'=>1
         ];
+    
+        if(isset($formData['profile']) && !empty($formData['profile'])){
+            $path = Storage::disk('s3')->put('Dev',$formData['profile']);
+            $updatedData['profile_image'] = config("app.aws_bucket_base_url").$path;
+            
+        }
         $userSignUp=User::where('id',$userDetail->id)->update($updatedData);
         if($userSignUp){
             return Helper::constructResponse(false,'Profile updated successfully',200,null);

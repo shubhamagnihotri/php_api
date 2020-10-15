@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Country;
 use App\Models\CountryState;
-
+use Illuminate\Support\Facades\Storage;
 use Validator;
 class OnboardingController extends Controller
 {
@@ -154,7 +154,6 @@ class OnboardingController extends Controller
 
     // registration of user
     public function updateProfile(Request $request){
-     
         $isValidationFailed=$this->validationServiceObject->validateupdateProfile($request->all());
         if ($isValidationFailed) {
             return response()->json($isValidationFailed, 400);
