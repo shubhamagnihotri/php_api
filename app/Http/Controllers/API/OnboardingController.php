@@ -252,7 +252,8 @@ class OnboardingController extends Controller
             $user = auth()->user();
             $role = $this->businessLogicServiceObject->getRoleByuserId($user->id);
             $user->role = $role;
-            return $user;
+            //return $user;
+            return Helper::constructResponse(false,'',200,$user);
         }else{
             return Helper::constructResponse(true,'Unauthorized',402,[]);
         }

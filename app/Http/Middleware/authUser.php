@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserSession;
 use App\Models\UserRole;
+use App\Helpers\CustomHelper as Helper;
 class authUser
 {
     /**
@@ -24,7 +25,8 @@ class authUser
         $header = explode(" ",$request->header('Authorization'));
         $tokenExist =  UserSession::where('token',$header[count($header)-1])->first();
         if(!$tokenExist){
-            return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]]);
+            // return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]]);
+            return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]], 401);
         }
         if(auth()->user()){
             $user = auth()->user();
@@ -34,7 +36,8 @@ class authUser
             $request->user = $user;
             $request->token = $header[count($header)-1];
         }else{
-            return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]]);
+            // return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]]);
+            return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]], 401);
            
         }
         return $next($request);
