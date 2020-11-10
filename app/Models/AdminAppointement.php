@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ProductImages extends Model
+class AdminAppointement extends Model
 {
     //
+    protected $hidden = [];
     protected $primaryKey = 'id';
-    protected $table = 'product_images';
+    protected $table = 'admin_appointments';
 }

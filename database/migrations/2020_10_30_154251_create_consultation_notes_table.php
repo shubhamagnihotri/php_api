@@ -19,6 +19,7 @@ class CreateConsultationNotesTable extends Migration
             $table->tinyInteger('note_type')->comments('1->initial meeting,2->follow up meeting notes');
             $table->integer('condition_id');
             $table->text('consultation_note');
+            $table->integer('created_by');
             $table->timestamps();
         });
     }

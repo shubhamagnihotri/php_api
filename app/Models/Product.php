@@ -7,4 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     //
+    protected $primaryKey = 'id';
+    protected $table = 'products';
 }

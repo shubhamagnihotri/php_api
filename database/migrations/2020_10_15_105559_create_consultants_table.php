@@ -24,6 +24,8 @@ class CreateConsultantsTable extends Migration
             $table->tinyInteger('feedback_rating')->default(0)->nullable();
             $table->text('feedback_text')->nullable();
             $table->text('car_admin_remarks')->nullable();
+            $table->integer('concern_type')->nullable();
+            $table->integer('condition_type')->nullable();
             $table->tinyInteger('consultant_status')->comments('0->in progress,1->final submitted,2->under review,3-> completed')->default(0)->nullable();
             $table->timestamps();
         });

@@ -68,6 +68,7 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 });
 //close verify.authUser middleware 
 
+
 // for admin console apis
 Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function(){
     // get consultation queue
@@ -75,8 +76,33 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::get('get_consultation_queue/{id}','API\AdminController@getConsultationFullDetail');
     Route::post('generate_car/{id}','API\AdminController@generateCar');
     Route::post('add_consultation_notes/{id}','API\AdminController@addConsultationNotes');
-    Route::post('get_generated_car_detail/{id}','API\AdminController@getGeneratedCarDetail');
+    Route::get('get_generated_car_detail/{id}','API\AdminController@getGeneratedCarDetail');
+
+    Route::post('get_users_data','API\AdminController@getUsersData');
+    Route::get('get_user_data/{id}','API\AdminController@getUserDetail');
+    Route::put('update_profile_status/{id}','API\AdminController@updateProfileStatus');
+    Route::get('get_concern_and_condition_type','API\AdminController@getConcernAndConditionType');
+    Route::post('add_product','API\AdminController@addProduct');
+    Route::post('get_products_by_concern/{id}','API\AdminController@getProductByConcern');
+    Route::put('update_product_status/{id}','API\AdminController@updateProductStatus');
+    Route::get('get_product_detail/{id}','API\AdminController@getProductDetail');
+    Route::post('update_product_detail/{id}','API\AdminController@updateProductDetail');
+    Route::delete('delete_product_image/{id}','API\AdminController@deleteProductImage');
+
+    Route::get('get_product_related_consulation/{id}','API\AdminController@getProductRelatedConsulation');
+
+    //delete product not in use
+    // Route::get('delete_product_by_id/{id}','API\AdminController@deleteProductById');
+    Route::post('add_admin_appointment','API\AdminController@addAdminAppointment');
+    Route::post('get_appointment_detail/{id}','API\AdminController@getAppointmentDetail');
+    Route::post('update_appointment_status/{id}','API\AdminController@updateAppointmentStatus');
+    Route::put('update_appointment_detail/{id}','API\AdminController@updateAdminAppointment');
+
+    Route::post('get_appointments','API\AdminController@getAppointments');
+
+
 });
+
 
 });
 //close v1 prefix 

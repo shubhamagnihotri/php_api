@@ -59,7 +59,136 @@ class AdminController extends Controller
 
     }
 
-    public function getGeneratedCarDetail(Request $request){
-
+    public function getGeneratedCarDetail(Request $request,$id){
+        $user_detail=$request->user;
+        $response = $this->businessLogicServiceObject->getGeneratedCarDetail($user_detail,$id);
+        return response()->json($response);
     }
+
+    public function getUsersData(Request $request){
+        $response = $this->businessLogicServiceObject->getUsersData($request->all());
+        return response()->json($response);
+    }
+
+    public function getUserDetail(Request $request,$id){
+        $response = $this->businessLogicServiceObject->getUserDetail($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function updateProfileStatus(Request $request,$id){
+     
+        $isValidationFailed=$this->validationServiceObject->updateProfileStatusvalidation($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->updateProfileStatus($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function getConcernAndConditionType(Request $request){
+        $response = $this->businessLogicServiceObject->getConcernAndConditionType($request->all());
+        return response()->json($response);
+    }
+
+    
+    public function addProduct(Request $request){
+        $isValidationFailed=$this->validationServiceObject->addProductvalidation($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->addProduct($request->all());
+        return response()->json($response);
+    }
+
+    public function getProductByConcern(Request $request,$id){
+        $response = $this->businessLogicServiceObject->getProductByConcern($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function updateProductStatus(Request $request,$id){
+        $isValidationFailed=$this->validationServiceObject->updateProductStatusvalidation($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->updateProductStatus($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function getProductDetail(Request $request,$id){
+        $response = $this->businessLogicServiceObject->getProductDetail($request->all(),$id);
+        return response()->json($response);
+    }
+
+    
+    public function updateProductDetail(Request $request,$id){
+        $isValidationFailed=$this->validationServiceObject->updateProductDetailvalidation($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->updateProductDetail($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function deleteProductImage(Request $request,$id){
+      
+        $response = $this->businessLogicServiceObject->deleteProductImage($id);
+        return response()->json($response);
+    }
+
+    public function getProductRelatedConsulation(Request $request,$id){
+        $response = $this->businessLogicServiceObject->getProductRelatedConsulation($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function deleteProductById(Request $request,$id){
+        $response = $this->businessLogicServiceObject->deleteProductById($request->all(),$id);
+        return response()->json($response);
+    }
+
+    
+    public function addAdminAppointment(Request $request){
+        $isValidationFailed=$this->validationServiceObject->addAdminAppointmentValidation($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->addAdminAppointment($request->all());
+        return response()->json($response);
+    }
+
+    public function getAppointmentDetail(Request $request,$id){
+        $isValidationFailed=$this->validationServiceObject->getAppointmentDetail($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->getAppointmentDetail($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function updateAppointmentStatus(Request $request,$id){
+        $isValidationFailed=$this->validationServiceObject->updateAppointmentStatusValidation($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->updateAppointmentStatus($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function updateAdminAppointment(Request $request,$id){
+        $isValidationFailed=$this->validationServiceObject->updateAdminAppointmentsValidation($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->updateAdminAppointment($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function getAppointments(Request $request){
+        // $isValidationFailed=$this->validationServiceObject->updateAdminAppointmentsValidation($request->all());
+        // if ($isValidationFailed) {
+        //     return response()->json($isValidationFailed, 400);
+        // }
+        $response = $this->businessLogicServiceObject->getAppointments($request->all());
+        return response()->json($response);
+    }
+
 }
