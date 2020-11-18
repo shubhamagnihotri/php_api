@@ -69,6 +69,7 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 //close verify.authUser middleware 
 
 
+
 // for admin console apis
 Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function(){
     // get consultation queue
@@ -99,6 +100,18 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::put('update_appointment_detail/{id}','API\AdminController@updateAdminAppointment');
 
     Route::post('get_appointments','API\AdminController@getAppointments');
+    Route::post('add_question','API\AdminController@addQuestion');
+    Route::get('get_question_detail/{id}','API\AdminController@getQuestionDetail');
+    Route::get('delete_ques_option/{id}','API\AdminController@deleteQuesOption');
+    Route::post('edit_question/{id}','API\AdminController@editQuestion');
+    Route::post('update_video','API\AdminController@updateVideo');
+    Route::get('get_prom_video','API\AdminController@getPromVideo');
+
+    Route::get('get_static_pages_details','API\AdminController@getStaticPagesDetails');
+    Route::get('get_static_pages_details/{id}','API\AdminController@getStaticPageDetails');
+    Route::post('add_static_pages','API\AdminController@addStaticPages');
+    Route::delete('delete_static_page/{id}','API\AdminController@deleteStaticPage');
+
 
 
 });

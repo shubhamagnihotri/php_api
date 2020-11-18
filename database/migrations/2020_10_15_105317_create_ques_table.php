@@ -16,8 +16,7 @@ class CreateQuesTable extends Migration
         Schema::create('ques', function (Blueprint $table) {
             $table->id();
             $table->string('ques_title')->nullable();
-            $table->enum('ques_option_type',[1,2,3,4,5])->comment('1->radio,
-            2->checkbox,3->input,4->label,5->car')->default(1)->nullable();
+            $table->enum('ques_option_type',[1,2,3,4,5,6,7,8])->comment('1 ->Multiple choice (radio) 2 ->Checkbox 3 ->input 4 ->label (static page) 5-> car (dropdown) 6-> date 7-> time 8->image radio')->default(1)->nullable();
             $table->integer('ques_ordering_id')->comment('question_ordering_id for sorting')->nullable();
             $table->integer('ques_parent_option_id')->comment('0->nothing ,if option have sub question')->default(0)->nullable();
             $table->tinyInteger('is_sub_question')->comment('0=>not sub question,1=>subquestion')->default(0)->nullable();

@@ -183,11 +183,67 @@ class AdminController extends Controller
     }
 
     public function getAppointments(Request $request){
-        // $isValidationFailed=$this->validationServiceObject->updateAdminAppointmentsValidation($request->all());
+        $response = $this->businessLogicServiceObject->getAppointments($request->all());
+        return response()->json($response);
+    }
+
+    public function addQuestion(Request $request){
+       
+        $response = $this->businessLogicServiceObject->addQuestion($request->all());
+        return response()->json($response);
+    }
+
+    public function getQuestionDetail(Request $request,$id){
+       
+        $response = $this->businessLogicServiceObject->getQuestionDetail($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function deleteQuesOption(Request $request,$id){
+       
+        $response = $this->businessLogicServiceObject->deleteQuesOption($request->all(),$id);
+        return response()->json($response);
+    }
+    public function editQuestion(Request $request,$id){
+       
+        $response = $this->businessLogicServiceObject->editQuestion($request->all(),$id);
+        return response()->json($response);
+    }
+
+    public function updateVideo(Request $request){
+        // $isValidationFailed=$this->validationServiceObject->updateVideoValidation($request->all());
         // if ($isValidationFailed) {
         //     return response()->json($isValidationFailed, 400);
         // }
-        $response = $this->businessLogicServiceObject->getAppointments($request->all());
+        $response = $this->businessLogicServiceObject->updateVideo($request->all());
+        return response()->json($response);
+    }
+
+    public function getPromVideo(Request $request){
+        $response = $this->businessLogicServiceObject->getPromVideo($request->all());
+        return response()->json($response);
+    }
+
+    public function getStaticPagesDetails(Request $request){
+        $response = $this->businessLogicServiceObject->getStaticPagesDetails($request->all());
+        return response()->json($response);
+    }
+
+    
+    public function getStaticPageDetails(Request $request,$id){
+        $response = $this->businessLogicServiceObject->getStaticPageDetails($request->all(),$id);
+        return response()->json($response);
+    }
+    
+    public function addStaticPages(Request $request){
+      
+        $response = $this->businessLogicServiceObject->addStaticPages($request->all());
+        return response()->json($response);
+    }
+
+    public function deleteStaticPage(Request $request,$id){
+      
+        $response = $this->businessLogicServiceObject->deleteStaticPage($id);
         return response()->json($response);
     }
 

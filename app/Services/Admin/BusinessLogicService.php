@@ -13,6 +13,11 @@ use App\Models\ProductAssociatedTypes;
 use App\Models\ProductAssociatedConcernMapping;
 use App\Models\AdminAppointement;
 use App\Models\Appointment;
+use App\Models\Question;
+use App\Models\QuestionOption;
+use App\Models\PrmotionVideos;
+use App\Models\StaticPageLinking;
+use App\Models\StaticPages;
 use App\Helpers\CustomHelper as Helper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -552,6 +557,238 @@ class BusinessLogicService
         }
    
     }
+
+    public function addQuestion($formData){
+       
+        $ques = new Question();
+        $ques->ques_title = $formData['ques_title'];
+        $ques->ques_option_type = $formData['ques_option_type'];
+        $ques->is_last_question = 1;
+        $ques->is_use_existing_car=$formData['is_use_existing_car'];
+        $ques->ques_status = 1;
+        $ques->from_age_condition=$formData['from_age_condition'];
+        $ques->to_age_condition	=$formData['to_age_condition'];
+        $ques->save();
+        $inserted_data= Question::find( $ques->id);
+        $inserted_data->ques_ordering_id = $ques->id;
+        
+        $inserted_data->save();
+        if($ques->id){
+            Question::where('id','!=',$ques->id)->update([
+                'is_last_question'=>0
+            ]);
+
+            $question_options = $formData['question_option'];
+            $option_check_condition_id = $formData['option_check_condition_id'];
+            $condition_id=implode(",",$option_check_condition_id);
+            foreach($question_options as $question_option){
+                $new_ques_option = new QuestionOption();
+                //dd( $question_option);
+                if($formData['ques_option_type']== '8'){
+                    $new_ques_option->option_image = settype($question_option['value'],'string');
+                }else{
+                    $new_ques_option->option_title = settype($question_option['value'],'string');
+                }
+             
+                $new_ques_option->option_ques_id = $ques->id;
+                $new_ques_option->option_status = 1;
+                if(count($formData['option_check_condition_id']) > 0){
+                    $new_ques_option->option_check_condition_id =settype($condition_id,'string');
+                }else{
+                    $new_ques_option->option_check_condition_id =0;
+                }
+                
+                $new_ques_option->product_associated_type_id =$question_option['type_id'];
+                $new_ques_option->created_at =date("Y-m-d H:i:s");
+                // $new_ques_option->option_status = 1;
+                $new_ques_option->save();
+            }
+        }
+        if($ques){
+            return Helper::constructResponse(false,'Question added Successfully',200,[]);    
+        }
+
+    }
+
+    public function getQuestionDetail($formData,$ques_id){
+       $question=Question::where('id',$ques_id)->first();
+       if(!$question){
+        return Helper::constructResponse(true,'No Question are available',401,[]);
+       }
+       $option= QuestionOption::where('option_ques_id',$ques_id)->where('option_status',1)->get();
+       return Helper::constructResponse(false,'',200,['ques'=>$question,'option'=> $option]);
+    }
+
+    public function deleteQuesOption($formData,$option_id){
+        $option_updated= QuestionOption::where('id',$option_id)->update(['option_status'=>'0']);
+        if($option_updated){
+            return Helper::constructResponse(false,'Option Deleted Successfully',200,[]);
+        }
+    }
+ 
+    public function editQuestion($formData,$ques_id){
+        $question = Question::find($ques_id);
+        if(!$question){
+            return Helper::constructResponse(true,'question not available',200,[]);
+        }
+        $question->ques_title = $formData['ques_title'];
+        $question->ques_option_type = $formData['ques_option_type'];
+        $question->is_use_existing_car=$formData['is_use_existing_car'];
+        $question->from_age_condition=$formData['from_age_condition'];
+        $question->to_age_condition	=$formData['to_age_condition'];
+        $question->save();
+        $question_options = $formData['question_option'];
+        $condition_id=implode(",",$formData['option_check_condition_id']);
+        foreach($question_options as $question_option){
+            $update_data=[];
+            if($formData['ques_option_type']== '8'){
+                $update_data['option_image'] = $question_option['value'];
+            }else{
+                $update_data['option_title'] = $question_option['value'];
+            }
+            $update_data['option_check_condition_id'] = $condition_id;
+            $update_data['product_associated_type_id'] =$question_option['type_id'];
+            $update_data['updated_at'] =date("Y-m-d H:i:s");
+            $update_data['option_ques_id'] = $ques_id;
+            if( $question_option['is_new'] == 'false'){
+                // $ques_option = QuestionOption::find($question_option['option_id']);
+                // $update_data=[];
+                $ques_option=QuestionOption::where('id',$ques_id)->update($update_data);
+              
+            }else{
+                $update_data['created_at']= date("Y-m-d H:i:s");
+                $ques_option=QuestionOption::insert($update_data);
+                // $ques_option = new QuestionOption();
+            }  
+          
+        }
+        if($ques_option){
+            return Helper::constructResponse(false,'Option updated Successfully',200,[]);
+        }
+    }
+
+    public function updateVideo($formData){
+        $updatedata=[];
+        $updatedata['video_title'] = $formData['video_title'];
+        $updatedata['video_level'] = $formData['video_level'];
+        if(isset($formData['video_file']) && !empty($formData['video_file'])){
+            $path = Storage::disk('s3')->put('Dev',$formData['video_file']);
+            $updatedata['video_url'] = config("app.aws_bucket_base_url").$path;
+        }
+        $updatedata['updated_at'] = date("Y-m-d H:i:s");
+        if($formData['video_level'] == '2'){
+            $updatedata['play_after_ques_id'] =$formData['play_after_ques_id'];
+        }
+        $prom_video=PrmotionVideos::where('video_level',$updatedata['video_level'])->first();
+        if($prom_video){
+            $in_inserted=PrmotionVideos::where('video_level',$updatedata['video_level'])->update($updatedata);
+
+        }else{
+            $updatedata['created_at'] = date("Y-m-d H:i:s");
+            $in_inserted=PrmotionVideos::insert($updatedata);
+        }
+        if($in_inserted){
+            return Helper::constructResponse(false,'Video updated Successfully',200,[]);
+        }else{
+            return Helper::constructResponse(true,'Video not updated Successfully',200,[]);
+        }
+
+    }
+
+    public function getPromVideo($formData){
+       $prom_video= PrmotionVideos::get();
+       if($prom_video){
+        return Helper::constructResponse(true,'',200,[$prom_video]);
+       }
+    }
+
+    public function getStaticPagesDetails($formData){
+        $static_pages=StaticPages::get();
+        if($static_pages){
+         return Helper::constructResponse(true,'',200,$static_pages);
+        }
+    }
+
+    public function getStaticPageDetails($formData,$id){
+        $static_page=StaticPages::where('id',$id)->first();
+        if($static_page){
+            $static_page_linking = StaticPageLinking::where('static_page_id',$id)->get();
+            foreach($static_page_linking as $spl){
+                if($spl['option_id']){
+                    $ques_option = QuestionOption::where('id',$spl['option_id'])
+                    ->where('option_status',1)->first();
+                    if($ques_option['option_ques_id']){
+                        $ques = Question::where('id',$ques_option['option_ques_id'])
+                        ->where('ques_status',1)->first();
+                        $option = QuestionOption::where('option_ques_id',$ques_option['option_ques_id'])->get();
+                        $spl['question']= $ques;
+                       
+                        foreach($option as $op){
+                            if($op['id'] == $spl['option_id']){
+                                $op['is_selected'] = true;
+                            }else{
+                                $op['is_selected'] = false;
+                            }
+                        }
+                        $spl['question_option']= $option;
+                        
+                    }
+                   
+
+                }
+                if($spl['question_id']){
+                    $ques = Question::where('id',$spl['question_id'])
+                    ->where('ques_status',1)->first();
+                    $option = QuestionOption::where('option_ques_id',$ques_option['option_ques_id'])->get();
+                    $spl['question']= $ques;
+                    $spl['question']= $ques;
+                    $spl['question_option']= [];
+                }
+            }
+         return Helper::constructResponse(true,'',200,$static_page_linking);
+        }else{
+            return Helper::constructResponse(true,'',200,[]);
+        }
+    }
+
+    public function addStaticPages($formData){
+        $static_pages = new StaticPages();
+        $static_pages->page_title = $formData['page_title'];
+        $static_pages->page_content = $formData['page_content'];
+        $static_pages->created_at =  date("Y-m-d H:i:s");
+        $static_pages->updated_at =  date("Y-m-d H:i:s");
+        $static_pages->save();
+        foreach($formData['question'] as $question){
+            if($question['ques_id']){
+                $static_page_link = new StaticPageLinking();
+                $static_page_link->static_page_id = $static_pages['id'];
+                $static_page_link->question_id = $question['ques_id'];
+                $static_page_link->save();
+            }
+            if($question['option_id']){
+                $static_page_link = new StaticPageLinking();
+                $static_page_link->static_page_id = $static_pages['id'];
+              
+                $static_page_link->option_id = $question['option_id'];
+                $static_page_link->save();
+            }
+        }
+        return Helper::constructResponse(true,'Static pages added successfully',200,[]);
+    }
+
+    public function deleteStaticPage($id){
+        $statPage=StaticPages::where('id',$id)->delete();
+        if($statPage){
+            StaticPageLinking::where('static_page_id',$id)->delete();
+            return Helper::constructResponse(false,'Static pages deleted successfully',200,[]);
+        }else{
+            return Helper::constructResponse(true,'',200,[]);
+        }
+    }
+ 
+
+
+
 
 
 }

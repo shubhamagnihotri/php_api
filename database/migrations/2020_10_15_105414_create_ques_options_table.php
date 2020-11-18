@@ -22,6 +22,7 @@ class CreateQuesOptionsTable extends Migration
             $table->string('option_link')->comment('link if any')->nullable(); 
             $table->string('option_image')->comment('image url')->nullable();
             $table->integer('option_check_condition_id')->default(0)->nullable();
+            $table->integer('product_associated_types_id')->default(0)->nullable();
             $table->integer('option_condition_true_next_question_id')->default(0)->nullable();
             $table->integer('option_condition_false_next_question_id')->default(0)->nullable();
            
