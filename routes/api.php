@@ -65,6 +65,9 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 
      //add consulation feedback from user 
      Route::match(['POST'],'add_consultation_appointment','API\QuestionnaireController@addConsultationAppointment');
+    // get available appointmnet slots
+    Route::match(['POST'],'get_consultation_slots','API\QuestionnaireController@getConsultationSlots');
+
 });
 //close verify.authUser middleware 
 

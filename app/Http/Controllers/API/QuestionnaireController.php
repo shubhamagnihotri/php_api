@@ -13,7 +13,10 @@ use App\Models\Consultant;
 use App\Models\QuesAnswerConsultant;
 use App\Models\Files;
 use App\Models\Appointment;
+use App\Models\AdminAppointement;
+use App\Models\AppointmentPrice;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Validator;
 class QuestionnaireController extends Controller
 {
@@ -364,6 +367,26 @@ class QuestionnaireController extends Controller
             return Helper::constructResponse(false,'Appointment Scheduled sucessfully',200,[]);
         }else{
             return Helper::constructResponse(true,'Appointment not Scheduled',200,[]);
+        }
+    }
+
+    public function getConsultationSlots(Request $request){
+        $date = $request->input('appointment_date');
+        $type = $request->input('appointment_type');
+        $appointment_time = AppointmentPrice::where('id',$type)->first();
+        if(!$appointment_time){
+            return Helper::constructResponse(true,'Something went wrong',200,[]);
+        }
+        $user_appointments =DB::table('appointments')->select('appointments.id','appointment_time','appointment_duration','appointment_status','appointments.appointment_type')->join('appointment_prices','appointment_prices.id','appointments.appointment_type')
+        ->where('appointments.appointment_date',$date)->get();
+    //    dd( $user_appointments);
+        $admin_appointments= DB::table('admin_appointments')->select('admin_appointments.id','appointment_time','appointment_prices.appointment_duration','appointment_status','admin_appointments.appointment_type')->join('appointment_prices','appointment_prices.id','admin_appointments.appointment_type')
+        ->where('admin_appointments.appointment_date',$date)->get();
+      
+        if(count($admin_appointments)){
+            foreach($admin_appointments as $ap){
+                $user_appointments[]=$ap;
+            }
         }
     }
 
