@@ -16,6 +16,7 @@ use App\Models\Appointment;
 use App\Models\AdminAppointement;
 use App\Models\AppointmentPrice;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Support\Facades\DB;
 use Validator;
 class QuestionnaireController extends Controller
@@ -39,7 +40,8 @@ class QuestionnaireController extends Controller
 
     // get first question and option start
     public function getFirstQuestion($formdata){
-        $ques = Question::where('id',1)->where('ques_status',1)->first();
+        $ques = Question::orderBy('ques_ordering_id','asc')->first();
+       // $ques = Question::where('id',1)->where('ques_status',1)->first();
         if(!$ques){
             return Helper::constructResponse(true,'No Question are available',401,[]);
         }
@@ -56,10 +58,12 @@ class QuestionnaireController extends Controller
                 }
             }
        }
-       return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option]);
+       return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
     }
     // get first question and option end
 
+
+    
 
     // submit question answer and get next question (Next question )start
     public function submitQuestionAnswerGetQues($formdata,$userData){
@@ -107,10 +111,10 @@ class QuestionnaireController extends Controller
 
         if($formdata['is_last_question'] == 'true'){
             $consult_status=Consultant::where('id',$formdata['consultation_id'])->where('user_id',$userData->id)->update([
-                'consultant_status'=>1,
+                'consultant_status'=>4,
                 'consultant_ended_at'=>date("Y-m-d H:i:s")
             ]);
-            $res = ['ques'=>[],'option'=> [],'is_final_ques_submitted'=>false];
+            $res = ['ques'=>[],'option'=> [],'is_final_ques_submitted'=>false,'link'=>'','consultation_id'=> $formdata['consultation_id']];
             if($consult_status){
                 $res['is_final_ques_submitted'] = true;
             }
@@ -118,6 +122,9 @@ class QuestionnaireController extends Controller
         }
         if($max_ques_options != null){
             $option = QuestionOption::where('id',$max_ques_options)->where('option_status',1)->first();
+            if($option && $option->option_link){
+                return Helper::constructResponse(false,'',200,['ques'=>[],'option'=> [],'link'=>$option->option_link,'consultation_id'=> $formdata['consultation_id']]);
+            }
             if(!$option){
                 return Helper::constructResponse(true,'Option not available',401,[]);
             }
@@ -164,7 +171,7 @@ class QuestionnaireController extends Controller
                     return Helper::constructResponse(true,'No Question are available',401,[]);
                 }
                 $option= QuestionOption::where('option_ques_id',$ques->id)->where('option_status',1)->get();
-                return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option]);
+                return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'link'=>'']);
 
             }// option_check_condition_id == 0
 
@@ -189,7 +196,7 @@ class QuestionnaireController extends Controller
                             }
                         }
                     }
-                    return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option]);
+                    return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=> $formdata['consultation_id']]);
                 }
             }
 
@@ -197,6 +204,9 @@ class QuestionnaireController extends Controller
       
     }
     // submit question answer and get next question (Next question )end
+
+
+
        
 
     // chcek and get subquestion of question start
@@ -238,7 +248,14 @@ class QuestionnaireController extends Controller
     //start get consultaion detail 
     public function getConsultaionDetail(Request $request){
         $user_id = $request->user->id;
-        $consultations=Consultant::where('user_id',$user_id)->orderBy('id','desc')->get();
+        $consultations=Consultant::where('user_id',$user_id)->orderBy('id','desc');
+        if($request->input('page_number')){
+            $no_of_record = 3;
+            $page_number = $request->input('page_number');
+            $start_limit = ($page_number*$no_of_record);
+            $consultations = $consultations->offset($start_limit)->limit($no_of_record);
+        }
+        $consultations=$consultations->get();
        foreach($consultations as $consult){
             $files= Files::where('user_id',$user_id)->where('consultation_id',$consult['id'])->get();
             $consult['files']=  $files;
@@ -246,6 +263,10 @@ class QuestionnaireController extends Controller
        return Helper::constructResponse(false,'',200,['consultation_detail'=>$consultations]);
     }
 
+     //start get consultaion detail 
+    public function getSheduledAppointments(Request $request){
+        
+    }
     
 
     //end get consultaion detail 
@@ -370,24 +391,88 @@ class QuestionnaireController extends Controller
         }
     }
 
+
+    // getting available slots 
     public function getConsultationSlots(Request $request){
+      
+        $validation['rules'] = [
+            'appointment_date' => ['required'],
+            'appointment_type'=>['required']
+        ];
+        $validation['messages'] = [
+            'appointment_date.required' => 'Appointment date is required',
+            'appointment_type.required' => 'Appointment Type is required',
+        ];
+        $validation =  Validator::make($request->all(),$validation['rules'], $validation['messages']);
+        if ($validation->fails()) {
+            $apiResponse = $validation->errors();
+            return Helper::constructResponse(true,'validation error',400,$apiResponse);
+        }
         $date = $request->input('appointment_date');
         $type = $request->input('appointment_type');
         $appointment_time = AppointmentPrice::where('id',$type)->first();
         if(!$appointment_time){
             return Helper::constructResponse(true,'Something went wrong',200,[]);
         }
-        $user_appointments =DB::table('appointments')->select('appointments.id','appointment_time','appointment_duration','appointment_status','appointments.appointment_type')->join('appointment_prices','appointment_prices.id','appointments.appointment_type')
-        ->where('appointments.appointment_date',$date)->get();
-    //    dd( $user_appointments);
-        $admin_appointments= DB::table('admin_appointments')->select('admin_appointments.id','appointment_time','appointment_prices.appointment_duration','appointment_status','admin_appointments.appointment_type')->join('appointment_prices','appointment_prices.id','admin_appointments.appointment_type')
-        ->where('admin_appointments.appointment_date',$date)->get();
-      
-        if(count($admin_appointments)){
-            foreach($admin_appointments as $ap){
-                $user_appointments[]=$ap;
-            }
+        $start_time= config("app.appointment_start_time");
+        $end_time=config("app.appointment_end_time");
+        $slots = $this->getSlots($appointment_time->appointment_duration,$start_time,$end_time);
+        foreach($slots as $key=>$slot){
+            $time['start'] = $slot['start'];
+            $time['end'] = $slot['end'];
+           
+           $user_app = DB::table('appointments')->where('appointment_date',"'".$date."'")
+           ->where(function($query) use ($time) {
+                $query->where('appointment_time', '<=',$time['start'])
+                ->Where('appointment_end_time','>',$time['start']);
+           })->orWhere(function($query) use ($time) {
+                $query->where('appointment_time', '<',$time['end'])
+                ->Where('appointment_end_time', '>=',$time['end']);
+           })
+           ->first();
+
+           $admin_app = DB::table('admin_appointments')
+           ->where('appointment_date',"'".$date."'")
+           ->where(function($query) use ($time) {
+                $query->where('appointment_time', '<=',$time['start'])
+                ->Where('appointment_end_time','>',$time['start']);
+           })->orWhere(function($query) use ($time) {
+                $query->where('appointment_time', '<', $time['end'])
+                ->Where('appointment_end_time', '>=',$time['end']);
+           })->first();
+
+           if($user_app || $admin_app){
+               echo $time['start']."--".$time['end'];
+               //echo $time['end'];
+              $slots[$key]['is_booked'] = true;
+           }else{
+            $slots[$key]['is_booked'] = false;
+           }
+           
         }
+        return Helper::constructResponse(true,'Slots details',200,$slots);
+    }
+
+
+    public function getSlots($duration, $start,$end){
+        $start = new DateTime($start);
+        $end = new DateTime($end);
+        $start_time = $start->format('H:i');
+        $end_time = $end->format('H:i');
+        $i=0;
+        while(strtotime($start_time) <= strtotime($end_time)){
+            $start = $start_time;
+            $end = date('H:i',strtotime('+'.$duration.' minutes',strtotime($start_time)));
+            
+            $start_time = date('H:i',strtotime('+'.$duration.' minutes',strtotime($start_time)));
+            
+            if(strtotime($start_time) <= strtotime($end_time)){
+                $time[$i]['start'] = $start;
+                $time[$i]['end'] = $end;
+            }
+            $i++;
+        }
+        return $time;
     }
 
     

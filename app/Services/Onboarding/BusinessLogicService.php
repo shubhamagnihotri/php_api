@@ -42,9 +42,9 @@ class BusinessLogicService
                 $message->to($data['toEmail'], $data['toName'])->subject($data['subject']);
                 $message->from($data['fromEmail'],$data['fromName']);
             });
-            return Helper::constructResponse(false,'Otp generated successfully !',200,[]);
+            return Helper::constructResponse(false,'Otp generated successfully!',200,[]);
         }else{
-            return Helper::constructResponse(true,'Otp not generated !',401,[]);
+            return Helper::constructResponse(true,'Otp not generated!',401,[]);
         }
     }
 
@@ -88,7 +88,7 @@ class BusinessLogicService
     public function validateOtp($formData)
     {
         $otpDetail = Otp::where('email',$formData['email'])->orderBy('id','desc')->first();
-        if($otpDetail && $otpDetail['email_otp'] == $formData['otp']){
+        if($otpDetail && $otpDetail['email_otp'] == $formData['otp'] && $otpDetail['status']== '1'){
            $create_strtotime = strtotime($otpDetail->created_at);
            $allowed_strtotime =  $create_strtotime+(60*5);
            $incomming_req_strtotime = strtotime(date("Y-m-d H:i:s"));

@@ -448,7 +448,7 @@ class BusinessLogicService
                 'appointment_duration'=>$formData['appointment_duration'],
                 'updated_at' => date("Y-m-d H:i:s")
             ];
-            $appointment_detail= AdminAppointement::where('id',$id)->update( $update_data);
+            $appointment_detail= AdminAppointement::where('id',$id)->update($update_data);
         }
         if($formData['appointment_by'] == 'user'){
             $converted_time = date("H:i:s", strtotime($formData['appointment_time']));
@@ -458,7 +458,6 @@ class BusinessLogicService
                 'updated_at' => date("Y-m-d H:i:s")
             ];
             $appointment_detail= Appointment::where('id',$id)->update($update_data);
-           
         }
         if($appointment_detail){
             return Helper::constructResponse(false,'Appointment status changed sucessfully',200,$appointment_detail);
@@ -569,8 +568,15 @@ class BusinessLogicService
         $ques->from_age_condition=$formData['from_age_condition'];
         $ques->to_age_condition	=$formData['to_age_condition'];
         $ques->save();
+        $orderQuestion=Question::where('ques_parent_option_id','0')->orderBy('ques_ordering_id','desc')
+        ->first();
+        if($orderQuestion){
+            $order_id = $orderQuestion->ques_ordering_id +1;
+        }else{
+            $order_id = 1;
+        }
         $inserted_data= Question::find( $ques->id);
-        $inserted_data->ques_ordering_id = $ques->id;
+        $inserted_data->ques_ordering_id = $order_id;
         
         $inserted_data->save();
         if($ques->id){
@@ -579,21 +585,27 @@ class BusinessLogicService
             ]);
 
             $question_options = $formData['question_option'];
-            $option_check_condition_id = $formData['option_check_condition_id'];
+            if(isset($formData['option_check_condition_id'])){
+                $option_check_condition_id = $formData['option_check_condition_id'];
+            }else{
+                $option_check_condition_id = [0];
+            }
+           
             $condition_id=implode(",",$option_check_condition_id);
             foreach($question_options as $question_option){
                 $new_ques_option = new QuestionOption();
                 //dd( $question_option);
                 if($formData['ques_option_type']== '8'){
-                    $new_ques_option->option_image = settype($question_option['value'],'string');
+                    $new_ques_option->option_image = $question_option['value'];
                 }else{
-                    $new_ques_option->option_title = settype($question_option['value'],'string');
+                    // $new_ques_option->option_title = settype($question_option['value'],'string');
+                    $new_ques_option->option_title = $question_option['value'];
                 }
              
                 $new_ques_option->option_ques_id = $ques->id;
                 $new_ques_option->option_status = 1;
-                if(count($formData['option_check_condition_id']) > 0){
-                    $new_ques_option->option_check_condition_id =settype($condition_id,'string');
+                if(isset($formData['option_check_condition_id']) && count($formData['option_check_condition_id']) > 0){
+                    $new_ques_option->option_check_condition_id = $condition_id;
                 }else{
                     $new_ques_option->option_check_condition_id =0;
                 }
@@ -631,6 +643,7 @@ class BusinessLogicService
         if(!$question){
             return Helper::constructResponse(true,'question not available',200,[]);
         }
+        // dd($formData['ques_option_type']);
         $question->ques_title = $formData['ques_title'];
         $question->ques_option_type = $formData['ques_option_type'];
         $question->is_use_existing_car=$formData['is_use_existing_car'];
@@ -641,10 +654,11 @@ class BusinessLogicService
         $condition_id=implode(",",$formData['option_check_condition_id']);
         foreach($question_options as $question_option){
             $update_data=[];
-            if($formData['ques_option_type']== '8'){
+            if($formData['ques_option_type'] == '8'){
                 $update_data['option_image'] = $question_option['value'];
             }else{
                 $update_data['option_title'] = $question_option['value'];
+                $update_data['option_image'] = '';
             }
             $update_data['option_check_condition_id'] = $condition_id;
             $update_data['product_associated_type_id'] =$question_option['type_id'];
@@ -653,7 +667,7 @@ class BusinessLogicService
             if( $question_option['is_new'] == 'false'){
                 // $ques_option = QuestionOption::find($question_option['option_id']);
                 // $update_data=[];
-                $ques_option=QuestionOption::where('id',$ques_id)->update($update_data);
+                $ques_option=QuestionOption::where('id',$question_option['option_id'])->update($update_data);
               
             }else{
                 $update_data['created_at']= date("Y-m-d H:i:s");
@@ -696,10 +710,16 @@ class BusinessLogicService
     }
 
     public function getPromVideo($formData){
-       $prom_video= PrmotionVideos::get();
-       if($prom_video){
-        return Helper::constructResponse(true,'',200,[$prom_video]);
-       }
+        if(isset($formData['video_level'])){
+            $prom_video=PrmotionVideos::where('video_level',$formData['video_level'])->get();
+        }else{
+            $prom_video= PrmotionVideos::get();
+        }
+     
+       return Helper::constructResponse(true,'',200,$prom_video);
+    //    if($prom_video){
+      
+    //    }
     }
 
     public function getStaticPagesDetails($formData){
@@ -785,7 +805,116 @@ class BusinessLogicService
             return Helper::constructResponse(true,'',200,[]);
         }
     }
- 
+
+    public function getRootLevelQuestion($formData){
+       $ques= Question::where('ques_parent_option_id','0')
+        ->orderBy('ques_ordering_id','asc')->get();
+        return Helper::constructResponse(false,'Question list Found successfully',200,[$ques]);
+
+    }
+
+    public function updateQuestionLinking($formData){
+        $ques_id = $formData['ques_id'];
+        $option_id = $formData['option_id'];
+        $update_data =[];
+        if($option_id){
+            $update_data['ques_parent_option_id'] = $option_id;
+        }
+        if($option_id == '0'){
+            $question_detail = Question::where('id',$formData['above_ques_id'])->first();
+            $all_question_lists = Question::where('ques_ordering_id','>',$question_detail->ques_ordering_id)
+            ->where('ques_parent_option_id','0')
+            ->where('id','!=',$ques_id)
+            ->orderBy('ques_ordering_id','asc')->get();
+            $question_order_id = $question_detail->ques_ordering_id+1;
+            $updated_question = Question::find($formData['ques_id']);
+            if($question_detail){
+                $order_id = $question_detail->ques_ordering_id + 1 ;
+                $updated_question->ques_ordering_id = $order_id;
+            }else{
+                $order_id = 1;
+                $updated_question->ques_ordering_id = 1;
+            }
+            $updated_question->ques_parent_option_id = 0;
+            $updated_question->save();
+            foreach($all_question_lists as $all_question_list){
+                $order_id = $order_id+1;
+                $change_order_id = Question::find($all_question_list['id']);
+                $change_order_id->ques_ordering_id = $order_id;
+                $change_order_id->save();
+            }
+            
+            $is_updated = true;
+        }else{
+            $max_order_id= Question::where('ques_parent_option_id',$option_id)
+            ->where('id','!=',$ques_id)
+            ->orderBy('ques_ordering_id','desc')->first();
+            if($max_order_id){
+                $order_id=  $max_order_id->ques_ordering_id + 1;
+            }else{
+                $order_id= 1;
+            }
+            $update_data['ques_ordering_id'] = $order_id;
+            $is_updated= Question::where('id',$ques_id)
+            ->update($update_data);
+        }
+        if($is_updated){
+            return Helper::constructResponse(false,'Question seqencing updated ',200,[]);
+        }else{
+            return Helper::constructResponse(true,' ',200,[]);
+        }
+     }
+
+
+     public function getQuesLinkingQuestions($formData){
+        $base_questions=DB::table('ques')->where('ques_parent_option_id','0')->orderBy('ques_ordering_id','asc')->get();
+       foreach($base_questions as $base_question){
+         
+           $question_options =  DB::table('ques_options')->where('option_ques_id',$base_question->id)->orderBy('id','asc')->get();
+           foreach($question_options as $question_option){
+             $ques_exist_status =$this->in_option_ques_exist($question_option);
+             if($ques_exist_status){
+                $option_ques =$this->get_ques($question_option);
+                foreach($option_ques as $option_que){
+                    $get_ques_option =$this->get_ques_option($option_que);
+                    $option_que->option = $get_ques_option;
+                }
+                $question_option->ques=$option_ques;
+             }else{
+                $question_option->ques=[];
+             }
+           }
+           $base_question->option = $question_options;
+       }
+       return Helper::constructResponse(false,'Question seqencing updated ',200,$base_questions);
+     }
+
+     public function in_option_ques_exist($details){
+        $is_exist=DB::table('ques')->where('ques_parent_option_id',$details->id)->orderBy('id','asc')->first();
+        return $is_exist ?  true: false; 
+     }
+
+     public function get_ques($option){
+        $ques=DB::table('ques')->where('ques_parent_option_id',$option->id)->orderBy('id','asc')->get();
+        return $ques; 
+     }
+
+    public function get_ques_option($data){
+        $option= DB::table('ques_options')->where('option_ques_id',$data->id)->orderBy('id','asc')->get();
+        return $option; 
+    }
+
+    public function deleteQuestion($ques_id){
+        $ques=DB::table('ques')->where('id',$ques_id)->delete();
+        if($ques){
+            $option= DB::table('ques_options')->where('option_ques_id',$ques_id)->delete();
+           
+            return Helper::constructResponse(true,'Question deleted',401,[]);
+        }else{
+            return Helper::constructResponse(true,'Question not found',401,[]);
+        }
+       
+    }
 
 
 

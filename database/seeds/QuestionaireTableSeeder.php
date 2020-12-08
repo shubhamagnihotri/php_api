@@ -21,7 +21,9 @@ class QuestionaireTableSeeder extends Seeder
         DB::table('ques')->delete();
         DB::table('ques')->insert([
             ['id' => 1,'ques_title'=>'Do you spend more than 25 hours a week in working in any of these occupations?','ques_option_type'=>1,'ques_ordering_id'=>1,'ques_parent_option_id'=>0,'is_sub_question'=>0,'ques_status'=>1],
+
             ['id' => 2,'ques_title'=>'How long has your concern existed?','ques_option_type'=>1,'ques_ordering_id'=>2,'ques_parent_option_id'=>0,'is_sub_question'=>0,'ques_status'=>1],
+            
             ['id' => 3,'ques_title'=>'How would you describe the amount of hair shedding your experience?','ques_option_type'=>1,'ques_ordering_id'=>3,'ques_parent_option_id'=>0,'is_sub_question'=>0,'ques_status'=>1],
             //question 4
             ['id' => 4,'ques_title'=>'How much time do you spend on scalp care?','ques_option_type'=>1,'ques_ordering_id'=>4,'ques_parent_option_id'=>0,'is_sub_question'=>0,'ques_status'=>1],

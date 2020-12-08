@@ -246,5 +246,30 @@ class AdminController extends Controller
         $response = $this->businessLogicServiceObject->deleteStaticPage($id);
         return response()->json($response);
     }
+    public function getRootLevelQuestion(Request $request){
+      
+        $response = $this->businessLogicServiceObject->getRootLevelQuestion($request->all());
+        return response()->json($response);
+    }
+
+    public function updateQuestionLinking(Request $request){
+      
+        $response = $this->businessLogicServiceObject->updateQuestionLinking($request->all());
+        return response()->json($response);
+    }
+
+    
+    public function getQuesLinkingQuestions(Request $request){
+        $response = $this->businessLogicServiceObject->getQuesLinkingQuestions($request->all());
+        return response()->json($response);
+    }
+
+    public function deleteQuestion(Request $request,$id){
+        $response = $this->businessLogicServiceObject->deleteQuestion($id);
+        return response()->json($response);
+    }
+
+
+
 
 }

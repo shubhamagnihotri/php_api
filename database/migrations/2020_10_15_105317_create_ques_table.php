@@ -22,7 +22,10 @@ class CreateQuesTable extends Migration
             $table->tinyInteger('is_sub_question')->comment('0=>not sub question,1=>subquestion')->default(0)->nullable();
             $table->tinyInteger('is_last_question')->comment('0->not last, 1->last')->default(0)->nullable();
             $table->tinyInteger('ques_status')->comment('0->incative ,1->active')->default(1)->nullable();
-        
+            $table->tinyInteger('is_use_existing_car')->comment('0>no 1->list of all existing car')->default(0)->nullable();
+            $table->string('from_age_condition')->default(0)->nullable();
+            $table->string('to_age_condition')->default(0)->nullable();
+
             // $table->tinyInteger('option_field_type')->comment('1=>radio,2=>checkbox')->default(1);
             // $table->integer('check_condition_id')->comment('0-> no checking ondition')->default(0)->nullable();
             // $table->integer('condition_true_next_question_id')->comment('if any condition apply and true')->default(0)->nullable();

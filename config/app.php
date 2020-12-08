@@ -122,6 +122,8 @@ return [
     'imap_hostfromname'=> env('MAIL_FROM_NAME'),
     'aws_bucket_base_url'=> env('AWS_BUCKET_BASE_URL'),
     'key' => env('APP_KEY'),
+    'appointment_start_time' => '10:00AM',
+    'appointment_end_time' => '07:00PM',
 
     'cipher' => 'AES-256-CBC',
 

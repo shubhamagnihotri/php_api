@@ -33,6 +33,7 @@ class OnboardingController extends Controller
        $response = $this->businessLogicServiceObject->generateOtp($request->all());
        return response()->json($response);
     }
+
     public function getEthnicity(Request $request){
         $a = config('app-config.ethnicity');
         return Helper::constructResponse(false,'',200,$a);
@@ -42,6 +43,7 @@ class OnboardingController extends Controller
         $a = Country::all();
         return Helper::constructResponse(false,'',200,$a);
     }
+    
     public function getCountriesStates(Request $request){
         $a = CountryState::where('country_id',$request->input('country_id'))->get();
         return Helper::constructResponse(false,'',200,$a);
