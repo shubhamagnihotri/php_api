@@ -15,6 +15,12 @@ use App\Models\Files;
 use App\Models\Appointment;
 use App\Models\AdminAppointement;
 use App\Models\AppointmentPrice;
+use App\Models\Product;
+use App\Models\ConsultationProducts;
+use App\Models\ProductAssociatedConcernMapping;
+use App\Models\ProductAssociatedConditionMapping;
+use App\Models\ProductAssociatedTypes;
+use App\Models\ProductImages;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Facades\DB;
@@ -265,7 +271,9 @@ class QuestionnaireController extends Controller
 
      //start get consultaion detail 
     public function getSheduledAppointments(Request $request){
-        
+        $shedule_appointment = Consultant::join('appointments','consultations.id','appointments.consultation_id')
+        ->where('appointments.appointment_status','!=','2')->whereIn('consultations.consultant_status',[1,2])->get();
+        return Helper::constructResponse(false,'',200,$shedule_appointment);
     }
     
 
@@ -296,11 +304,11 @@ class QuestionnaireController extends Controller
             $consultations['is_followup_meeting_done']=false;
             $consultations['is_new_existing_meeting_done']=false;
             $initial_appointment = Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('user_id',$user_id)->where('consultation_id',$id)
-            ->where('appointment_type',1)->first();
+            ->where('appointment_type',1)->where('appointment_status','!=',2)->first();
             $followup_appointment = Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('user_id',$user_id)->where('consultation_id',$id)
-            ->where('appointment_type',2)->first();
+            ->where('appointment_type',2)->where('appointment_status','!=',2)->first();
             $new_on_existing = Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('user_id',$user_id)->where('consultation_id',$id)
-            ->where('appointment_type',3)->first();
+            ->where('appointment_type',3)->where('appointment_status','!=',2)->first();
             if($initial_appointment){
                 $consultations['is_initial_meeting_done']=true;
             }
@@ -325,6 +333,16 @@ class QuestionnaireController extends Controller
             $consultations['appointments']=$appointments;
             $files= Files::where('user_id',$user_id)->where('consultation_id',$id)->get();
             $consultations['files']=  $files;
+            $consultations['products']=ConsultationProducts::join('products','products.id','consultation_products.product_id')
+            ->where('consultation_products.consulation_id',$id)->where('consultation_products.status',1)->get();
+            foreach($consultations['products'] as $product){
+                $product_image = ProductImages::where('product_id',$product['product_id'])->get();
+                $product['product_image']=$product_image;
+                $product['concern']=ProductAssociatedConcernMapping::join('product_associated_types','product_associated_types.id','product_associated_concern_mapping.product_concern_id')
+                ->where('product_associated_concern_mapping.product_id',$product['product_id'])->where('product_associated_types.associated_type',1)->get();
+                $product['condition']=ProductAssociatedConcernMapping::join('product_associated_types','product_associated_types.id','product_associated_concern_mapping.product_concern_id')
+                ->where('product_associated_concern_mapping.product_id',$product['product_id'])->where('product_associated_types.associated_type',2)->get();
+            }
             $msg = '';
             $status = false;
         }else{
