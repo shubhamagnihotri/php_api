@@ -50,6 +50,8 @@ Route::group(['middleware' => ['verify.authUser']], function(){
     Route::post('update_profile','API\OnboardingController@updateProfile');
     Route::get('userProfile', 'API\OnboardingController@userProfile');
     Route::get('test', 'API\OnboardingController@test');
+
+    Route::match(['GET','POST'],'get_question_details/{id}','API\QuestionnaireController@getQuestionDetails');
   
     Route::match(['GET','POST'],'get_question_and_submit_answer','API\QuestionnaireController@getQuestionAndSubmitAnswer');
   

@@ -68,6 +68,29 @@ class QuestionnaireController extends Controller
     }
     // get first question and option end
 
+     // get Question Details
+     public function getQuestionDetails($id){
+        $ques = Question::where('id',$id)->first();
+       // $ques = Question::where('id',1)->where('ques_status',1)->first();
+        if(!$ques){
+            return Helper::constructResponse(true,'No Question are available',401,[]);
+        }
+       $option= QuestionOption::where('option_ques_id',$ques->id)->where('option_status',1)->get();
+       if(count($option) > 0){
+            foreach($option as $opt){
+               
+                $is_sub_ques = Question::where('ques_parent_option_id',$opt['id'])->where('ques_status',1)->where('is_sub_question',1)->first();
+              
+                if($is_sub_ques){
+                    $opt['is_sub_ques_exist'] = true;
+                }else{
+                    $opt['is_sub_ques_exist'] = false;
+                }
+            }
+       }
+       return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
+    }
+    // eo get first question and option end
 
     
 
