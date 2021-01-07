@@ -269,6 +269,15 @@ class AdminController extends Controller
         return response()->json($response);
     }
 
+    public function getConsultationCount(Request $request){
+        $isValidationFailed=$this->validationServiceObject->consultationCount($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $response = $this->businessLogicServiceObject->consultationCount($request->all());
+        return response()->json($response);
+    }
+
 
 
 

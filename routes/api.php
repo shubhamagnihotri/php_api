@@ -96,6 +96,9 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
 
     // get consultation queue
     Route::post('get_consultation_queue','API\AdminController@getConsultationQueue');
+
+    Route::post('get_consultation_count','API\AdminController@getConsultationCount');
+
     Route::get('get_consultation_queue/{id}','API\AdminController@getConsultationFullDetail');
     Route::post('generate_car/{id}','API\AdminController@generateCar');
     Route::post('add_consultation_notes/{id}','API\AdminController@addConsultationNotes');

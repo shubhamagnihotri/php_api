@@ -41,11 +41,26 @@ class BusinessLogicService
             $Consultant = $Consultant->offset($start_limit)->limit($formData['no_of_record']);
         }
         $Consultant=$Consultant->get();
+        // dd($Consultant);
         $count =Consultant::join('users','users.id','consultations.user_id')
         ->where('consultations.consultant_status',$formData['consultantion_status'])->orderBy('consultations.id','desc')->get()->count();
         
         return Helper::constructResponse(false,'',200,['Consultant'=>$Consultant,'count'=>$count]);
     }
+
+    public function consultationCount($formData){
+      
+        $pending =Consultant::join('users','users.id','consultations.user_id')
+        ->where('consultations.consultant_status',1)->orderBy('consultations.id','desc')->get()->count();
+        $under_review =Consultant::join('users','users.id','consultations.user_id')
+        ->where('consultations.consultant_status',2)->orderBy('consultations.id','desc')->get()->count();
+        $complete =Consultant::join('users','users.id','consultations.user_id')
+        ->where('consultations.consultant_status',2)->orderBy('consultations.id','desc')->get()->count();
+        
+        return Helper::constructResponse(false,'',200,['pending'=>$pending,'under_review'=>$under_review,'complete'=>$complete]);
+    }
+
+
 
     public function getConsultationFullDetail($id){
         Consultant::where('id',$id)->where('consultant_status',1)->update([
