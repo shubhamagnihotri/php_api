@@ -55,7 +55,7 @@ class BusinessLogicService
         $under_review =Consultant::join('users','users.id','consultations.user_id')
         ->where('consultations.consultant_status',2)->orderBy('consultations.id','desc')->get()->count();
         $complete =Consultant::join('users','users.id','consultations.user_id')
-        ->where('consultations.consultant_status',2)->orderBy('consultations.id','desc')->get()->count();
+        ->where('consultations.consultant_status',3)->orderBy('consultations.id','desc')->get()->count();
         
         return Helper::constructResponse(false,'',200,['pending'=>$pending,'under_review'=>$under_review,'complete'=>$complete]);
     }
