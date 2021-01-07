@@ -77,9 +77,21 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 //close verify.authUser middleware 
 
 
+//onboarding admin user
+
+Route::group(['prefix' => 'admin'], function(){
+    Route::post('generate_otp','API\OnboardingController@generateOtp');
+    Route::post('validate_otp','API\OnboardingController@validateOtp');
+    Route::post('generate_password','API\OnboardingController@generatePassword');
+    Route::post('forget_password','API\OnboardingController@forgetPassword');
+    Route::post('update_forget_password','API\OnboardingController@updateForgetPassword');
+});
 
 // for admin console apis
 Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function(){
+    //update profile admin
+    Route::post('update_profile','API\OnboardingController@updateProfile');
+
     // get consultation queue
     Route::post('get_consultation_queue','API\AdminController@getConsultationQueue');
     Route::get('get_consultation_queue/{id}','API\AdminController@getConsultationFullDetail');
