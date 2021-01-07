@@ -29,7 +29,9 @@ class BusinessLogicService
 
     public function getConsultationQueue($formData){
         $Consultant = Consultant::select('consultations.*','users.fname','users.lname','users.email','users.ethinicity','users.gender','date_of_birth')->join('users','users.id','consultations.user_id')
-        ->where('consultations.consultant_status',$formData['consultantion_status'])->orderBy('consultations.id','desc');
+        ->where('users.profile_status','!=',2)
+        ->where('consultations.consultant_status',$formData['consultantion_status'])
+        ->orderBy('consultations.id','desc');
         if(isset($formData['search_by_text'])){
             $Consultant= $Consultant->where('users.fname','like','%'.$formData['search_by_text'].'%')
             ->orWhere('users.lname','like','%'.$formData['search_by_text'].'%')
