@@ -28,7 +28,7 @@ class BusinessLogicService
     }
 
     public function getConsultationQueue($formData){
-        $Consultant = Consultant::select('consultations.*','users.fname','users.lname','users.email','users.ethinicity')->join('users','users.id','consultations.user_id')
+        $Consultant = Consultant::select('consultations.*','users.fname','users.lname','users.email','users.ethinicity','users.gender','date_of_birth')->join('users','users.id','consultations.user_id')
         ->where('consultations.consultant_status',$formData['consultantion_status'])->orderBy('consultations.id','desc');
         if(isset($formData['search_by_text'])){
             $Consultant= $Consultant->where('users.fname','like','%'.$formData['search_by_text'].'%')
@@ -41,7 +41,18 @@ class BusinessLogicService
             $Consultant = $Consultant->offset($start_limit)->limit($formData['no_of_record']);
         }
         $Consultant=$Consultant->get();
-        // dd($Consultant);
+        foreach($Consultant as $consult){
+            $consult['age']=date_diff(date_create($consult['date_of_birth']), date_create('today'))->y;
+            if($consult['gender'] == 'm'){
+                $consult['gender'] = 'Male';
+            }else if($consult['gender'] == 'f'){
+                $consult['gender'] = 'Female';
+            }else if($consult['gender'] == 't'){
+                $consult['gender'] = 'Transgender';
+            }else if($consult['gender'] == 'o'){
+                $consult['gender'] = 'Others';
+            }
+        }
         $count =Consultant::join('users','users.id','consultations.user_id')
         ->where('consultations.consultant_status',$formData['consultantion_status'])->orderBy('consultations.id','desc')->get()->count();
         
