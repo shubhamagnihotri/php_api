@@ -80,6 +80,7 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 //onboarding admin user
 
 Route::group(['prefix' => 'admin'], function(){
+    Route::post('auth/login', 'API\OnboardingController@login');
     Route::post('generate_otp','API\OnboardingController@generateOtp');
     Route::post('validate_otp','API\OnboardingController@validateOtp');
     Route::post('generate_password','API\OnboardingController@generatePassword');
@@ -91,6 +92,7 @@ Route::group(['prefix' => 'admin'], function(){
 Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function(){
     //update profile admin
     Route::post('update_profile','API\OnboardingController@updateProfile');
+    Route::post('logout', 'API\OnboardingController@logout');
 
     // get consultation queue
     Route::post('get_consultation_queue','API\AdminController@getConsultationQueue');
