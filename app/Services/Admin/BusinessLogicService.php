@@ -30,9 +30,17 @@ class BusinessLogicService
 
     public function getConsultationQueue($formData){
         $Consultant = Consultant::select('consultations.*','users.fname','users.lname','users.email','users.ethinicity','users.gender','date_of_birth')->join('users','users.id','consultations.user_id')
-        ->where('users.profile_status','!=',2)
-        ->where('consultations.consultant_status',$formData['consultantion_status'])
-        ->orderBy('consultations.id','desc');
+        ->where('users.profile_status','!=',2);
+      
+        //0 pending ,2 under review, 3 completed 
+        if( $formData['consultantion_status'] == 1 ){
+            $Consultant = $Consultant->where('consultations.consultant_status',1)->whereNull('consultations.car_report_response');
+        }else if($formData['consultantion_status'] == 2){
+            $Consultant = $Consultant->where('consultations.consultant_status',2)->whereNull('consultations.car_report_response');
+        }elseif($formData['consultantion_status'] == 3){
+            $Consultant = $Consultant->whereNotNull('consultations.car_report_response');
+        }
+        $Consultant =$Consultant ->orderBy('consultations.id','desc');
         if(isset($formData['search_by_text'])){
             $Consultant= $Consultant->where('users.fname','like','%'.$formData['search_by_text'].'%')
             ->orWhere('users.lname','like','%'.$formData['search_by_text'].'%')
@@ -117,7 +125,7 @@ class BusinessLogicService
     public function getConsultationFullDetail($id){
         // $user_id = $request->user->id;
         
-        $consultations =Consultant::select('consultations.*','users.id as user_id','users.gender','users.fname','users.lname','users.date_of_birth','users.email','users.zip_code','countries.country_name',
+        $consultations =Consultant::select('consultations.*','users.id as user_id','users.gender','users.fname','users.lname','users.date_of_birth','users.email','users.ethinicity','users.zip_code','countries.country_name',
         'country_states.state_name','users.address')
         ->join('users','users.id','consultations.user_id')
         ->leftjoin('countries','countries.id','users.country')
