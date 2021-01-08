@@ -68,8 +68,10 @@ class QuestionnaireController extends Controller
     }
     // get first question and option end
 
+
+
      // get Question Details
-     public function getQuestionDetails($id){
+    public function getQuestionDetails($id){
         $ques = Question::where('id',$id)->first();
        // $ques = Question::where('id',1)->where('ques_status',1)->first();
         if(!$ques){
@@ -286,6 +288,26 @@ class QuestionnaireController extends Controller
         }
         $consultations=$consultations->get();
        foreach($consultations as $consult){
+           if(($consult['consultant_status']  == 4 || $consult['consultant_status']  == 2) && !empty($consult['car_report_response'])){ 
+            $days= date_diff(date_create(date_format($consult['consultant_created_at'],'Y-m-d')), date_create('today'))->d;
+            // if($days <= 9){
+            //     $consult['is_less_than_10_days'] = true;
+            // }else{
+            //     $consult['is_less_than_10_days'] = true;
+            // }
+            $consult['is_less_than_10_days']= $days <= 9? true:false;
+            $consult['is_between_10_90_days']= ($days >= 10 && $days <=89)? true:false;
+            $consult['is_more_than_90_days']= ($days >= 90)? true:false;
+           }else{
+            $consult['is_less_than_10_days'] = false;
+            $consult['is_between_10_90_days'] = false;
+            $consult['is_more_than_90_days'] = false;
+           }
+           if($consult['consultant_status'] == 0){
+            $consult['next_question_id']= $this->get_next_question($consult['id']);
+           }else{
+            $consult['next_question_id'] = null;
+           }
             $files= Files::where('user_id',$user_id)->where('consultation_id',$consult['id'])->get();
             $consult['files']=  $files;
        }
@@ -309,6 +331,26 @@ class QuestionnaireController extends Controller
             if($consultations['consultant_status'] == 0){
                 return Helper::constructResponse(false,'Consultation is not submitted successfully',200,[]);
             }
+            if(($consultations['consultant_status']  == 4 || $consultations['consultant_status']  == 2) && !empty($consultations['car_report_response'])){ 
+                $days= date_diff(date_create(date_format($consultations['consultant_created_at'],'Y-m-d')), date_create('today'))->d;
+                // if($days <= 9){
+                //     $consult['is_less_than_10_days'] = true;
+                // }else{
+                //     $consult['is_less_than_10_days'] = true;
+                // }
+                $consultations['is_less_than_10_days']= $days <= 9? true:false;
+                $consultations['is_between_10_90_days']= ($days >= 10 && $days <=89)? true:false;
+                $consultations['is_more_than_90_days']= ($days >= 90)? true:false;
+               }else{
+                $consultations['is_less_than_10_days'] = false;
+                $consultations['is_between_10_90_days'] = false;
+                $consultations['is_more_than_90_days'] = false;
+               }
+               if($consultations['consultant_status'] == 0){
+                $consultations['next_question_id']= $this->get_next_question($consultations['id']);
+               }else{
+                $consultations['next_question_id'] = null;
+               }
             $consultations['name'] = $request->user->fname." ". $request->user->lname;
             $consultations['age'] = date_diff(date_create($request->user->date_of_birth), date_create('today'))->y;
             if($request->user->gender == 'f'){
@@ -514,6 +556,11 @@ class QuestionnaireController extends Controller
             $i++;
         }
         return $time;
+    }
+
+
+    public function get_next_question($consultId){
+        return 4;
     }
 
     
