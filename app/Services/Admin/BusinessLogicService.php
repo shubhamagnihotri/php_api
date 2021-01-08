@@ -177,8 +177,18 @@ class BusinessLogicService
             $appointments=Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('consultation_id',$id)
             ->whereDate('appointment_date','>=',Carbon::now())->get();
             $consultations['appointments']=$appointments;
-            $files= Files::where('consultation_id',$id)->get();
-            $consultations['files']=  $files;
+            $leftfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',1)->get();
+            $rightfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',2)->get();
+            $frontfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',3)->get();
+            $backfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',4)->get();
+            $consultations['leftfiles']=  $leftfiles;
+            $consultations['rightfiles']=  $rightfiles;
+            $consultations['frontfiles']=  $frontfiles;
+            $consultations['backfiles']=  $backfiles;
             $consultations['products']=ConsultationProducts::join('products','products.id','consultation_products.product_id')
             ->where('consultation_products.consulation_id',$id)->where('consultation_products.status',1)->get();
             foreach($consultations['products'] as $product){
