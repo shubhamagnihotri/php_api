@@ -204,7 +204,8 @@ class BusinessLogicService
             }
             // getting consulation question 
             if($consultations['consultant_status'] == 1 || $consultations['consultant_status'] == 2){
-                $ques_answer=QuesAnswerConsultant::select('ques_id','option_id','question_for_admin','answer_for_admin')->where('consultant_id',$consultations['id'])->where('ques_answer_status',1)
+                $ques_answer=QuesAnswerConsultant::select('ques_id','option_id','question_for_admin','answer_for_admin')->where('consultant_id',$consultations['id'])
+                //->where('ques_answer_status',1)
                 ->orderby('id','asc')
                 ->get();
                 $consultations['ques_answer']= $ques_answer;
