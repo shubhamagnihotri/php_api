@@ -202,6 +202,15 @@ class BusinessLogicService
                 $product['condition']=ProductAssociatedConcernMapping::join('product_associated_types','product_associated_types.id','product_associated_concern_mapping.product_concern_id')
                 ->where('product_associated_concern_mapping.product_id',$product['product_id'])->where('product_associated_types.associated_type',2)->get();
             }
+            // getting consulation question 
+            if($consultations['consultant_status'] == 1 || $consultations['consultant_status'] == 2){
+                $ques_answer=QuesAnswerConsultant::select('ques_id','option_id','question_for_admin','answer_for_admin')->where('consultant_id',$consultations['id'])->where('ques_answer_status',1)
+                ->orderby('id','asc')
+                ->get();
+                $consultations['ques_answer']= $ques_answer;
+            }else{
+                $consultations['ques_answer']= [];
+            }
             $msg = '';
             $status = false;
         }else{
