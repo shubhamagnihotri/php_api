@@ -117,8 +117,11 @@ class BusinessLogicService
     public function getConsultationFullDetail($id){
         // $user_id = $request->user->id;
         
-        $consultations =Consultant::select('consultations.*','users.id as user_id','users.gender','users.fname','users.lname','users.date_of_birth','users.email')
+        $consultations =Consultant::select('consultations.*','users.id as user_id','users.gender','users.fname','users.lname','users.date_of_birth','users.email','users.zip_code','countries.country_name',
+        'country_states.state_name','users.address')
         ->join('users','users.id','consultations.user_id')
+        ->leftjoin('countries','countries.id','users.country')
+        ->leftjoin('country_states','country_states.id','users.state')
         ->where('consultations.id',$id)
         ->where('users.profile_status',1)->first();
         
