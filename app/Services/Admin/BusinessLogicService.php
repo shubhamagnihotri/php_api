@@ -21,6 +21,7 @@ use App\Models\StaticPages;
 use App\Helpers\CustomHelper as Helper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 class BusinessLogicService
 {
     public function __construct()
@@ -75,42 +76,138 @@ class BusinessLogicService
 
 
 
+    // public function getConsultationFullDetail($id){
+    //     Consultant::where('id',$id)->where('consultant_status',1)->update([
+    //         'consultant_status'=>2
+    //     ]);
+    //     $Consultant = DB::table('consultations')->select('consultations.*','users.fname','users.lname','users.email','users.ethinicity','users.gender','country_states.state_name','countries.country_name','users.zip_code')->join('users','users.id','consultations.user_id')->join('countries','users.country','countries.id')->join('country_states','country_states.id','users.state')
+    //     ->where('consultations.id',$id)->orderBy('consultations.id','desc')->first();
+    //     if( isset($Consultant->id)){
+    //        $files= Files::where('consultation_id',$Consultant->id)->get();
+    //        $Consultant->files=$files;
+    //        $Consultant->ques_answer=array();
+    //        $get_ques_answer_of_consultation = QuesAnswerConsultant::where('consultant_id',$Consultant->id)->orderBy('ques_id','asc')->orderBy('option_id','asc')->get();
+    //        $index =0;
+    //        foreach($get_ques_answer_of_consultation as $a=>$value){
+    //            $is_present = false;
+    //         if(count($Consultant->ques_answer) > 0){
+    //             foreach($Consultant->ques_answer as $key=>$ques_ans){
+    //                 if(array_search($value['ques_id'],$ques_ans)){
+    //                     $is_present = true;
+    //                    $Consultant->ques_answer[$key]['ques_answer'][] = $value['answer_for_admin'];
+    //                 }
+    //               }
+    //               if(!$is_present){
+    //                   $Consultant->ques_answer[$index]= array('ques_id'=>$value['ques_id'],
+    //                 'ques_title'=>$value['question_for_admin'],'ques_answer'=>[$value['answer_for_admin']]);
+    //               }
+    //               $index++;
+    //          }else{
+    //             $Consultant->ques_answer= array(array('ques_id'=>$value['ques_id'],
+    //             'ques_title'=>$value['question_for_admin'],'ques_answer'=>[$value['answer_for_admin']]));
+    //          }
+    //        }
+    //     }else{
+    //         $Consultant['files']=[];
+    //         $Consultant['ques_answer']=[];
+    //     }
+    //     return Helper::constructResponse(false,'',200,['Consultant'=>$Consultant]);
+    // }
+
     public function getConsultationFullDetail($id){
-        Consultant::where('id',$id)->where('consultant_status',1)->update([
-            'consultant_status'=>2
-        ]);
-        $Consultant = DB::table('consultations')->select('consultations.*','users.fname','users.lname','users.email','users.ethinicity','users.gender','country_states.state_name','countries.country_name','users.zip_code')->join('users','users.id','consultations.user_id')->join('countries','users.country','countries.id')->join('country_states','country_states.id','users.state')
-        ->where('consultations.id',$id)->orderBy('consultations.id','desc')->first();
-        if( isset($Consultant->id)){
-           $files= Files::where('consultation_id',$Consultant->id)->get();
-           $Consultant->files=$files;
-           $Consultant->ques_answer=array();
-           $get_ques_answer_of_consultation = QuesAnswerConsultant::where('consultant_id',$Consultant->id)->orderBy('ques_id','asc')->orderBy('option_id','asc')->get();
-           $index =0;
-           foreach($get_ques_answer_of_consultation as $a=>$value){
-               $is_present = false;
-            if(count($Consultant->ques_answer) > 0){
-                foreach($Consultant->ques_answer as $key=>$ques_ans){
-                    if(array_search($value['ques_id'],$ques_ans)){
-                        $is_present = true;
-                       $Consultant->ques_answer[$key]['ques_answer'][] = $value['answer_for_admin'];
-                    }
-                  }
-                  if(!$is_present){
-                      $Consultant->ques_answer[$index]= array('ques_id'=>$value['ques_id'],
-                    'ques_title'=>$value['question_for_admin'],'ques_answer'=>[$value['answer_for_admin']]);
-                  }
-                  $index++;
-             }else{
-                $Consultant->ques_answer= array(array('ques_id'=>$value['ques_id'],
-                'ques_title'=>$value['question_for_admin'],'ques_answer'=>[$value['answer_for_admin']]));
-             }
-           }
-        }else{
-            $Consultant['files']=[];
-            $Consultant['ques_answer']=[];
+        // $user_id = $request->user->id;
+        
+        $consultations =Consultant::select('consultations.*','users.id as user_id','users.gender','users.fname','users.lname','users.date_of_birth','users.email')
+        ->join('users','users.id','consultations.user_id')
+        ->where('consultations.id',$id)
+        ->where('users.profile_status',1)->first();
+        
+        if($consultations && $consultations->consultant_status == 1){
+            Consultant::where('id',$id)->where('consultant_status',1)
+                ->update([
+                        'consultant_status'=>2
+                ]);
         }
-        return Helper::constructResponse(false,'',200,['Consultant'=>$Consultant]);
+        if($consultations){
+            // if($consultations['consultant_status'] == 0){
+            //     return Helper::constructResponse(false,'Consultation is not submitted successfully',200,[]);
+            // }
+            $consultations['name'] = $consultations->fname." ". $consultations->lname;
+            $consultations['age'] = date_diff(date_create($consultations->date_of_birth), date_create('today'))->y;
+            if($consultations->gender == 'f'){
+                $consultations['gender']= "Female"; 
+            }else if($consultations->gender == 'm'){
+                $consultations['gender']= "Male";
+            }else if($consultations->gender == 't'){
+                $consultations['gender']= "Transgender";
+            }else{
+                $consultations['gender']= "Others";
+            }
+            $consultations['email']= $consultations->email;
+            $consultations['car_report_response']='ssss';
+            $consultations['products']=[];
+            $consultations['is_initial_meeting_done']=false;
+            $consultations['is_followup_meeting_done']=false;
+            $consultations['is_new_existing_meeting_done']=false;
+            $initial_appointment = Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('consultation_id',$id)
+            ->where('appointment_type',1)->where('appointment_status','!=',2)->first();
+            $followup_appointment = Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('consultation_id',$id)
+            ->where('appointment_type',2)->where('appointment_status','!=',2)->first();
+            $new_on_existing = Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('consultation_id',$id)
+            ->where('appointment_type',3)->where('appointment_status','!=',2)->first();
+            if($initial_appointment){
+                $consultations['is_initial_meeting_done']=true;
+            }
+            if($followup_appointment){
+                $consultations['is_followup_meeting_done']=true;
+            }
+            if($new_on_existing){
+                $consultations['is_new_existing_meeting_done']=true;
+            }
+
+            if( $consultations['consultant_status'] == 3){
+                $car_report_created_at = date('Y-m-d',strtotime($consultations['car_report_created_at']));
+                // dd($car_report_created_at );
+               $diff=date_diff(date_create('today'),date_create($car_report_created_at))->d;
+                // $days =  $diff->format("%d days");
+                $consultations['car_generated_days']=$diff;
+            }else{
+                $consultations['car_generated_days']=0;
+            }
+            $appointments=Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('consultation_id',$id)
+            ->whereDate('appointment_date','>=',Carbon::now())->get();
+            $consultations['appointments']=$appointments;
+            $leftfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',1)->get();
+            $rightfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',2)->get();
+            $frontfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',3)->get();
+            $backfiles= Files::where('consultation_id',$id)
+            ->where('file_view_from',4)->get();
+            $consultations['leftfiles']=  $leftfiles;
+            $consultations['rightfiles']=  $rightfiles;
+            $consultations['frontfiles']=  $frontfiles;
+            $consultations['backfiles']=  $backfiles;
+            $consultations['products']=ConsultationProducts::join('products','products.id','consultation_products.product_id')
+            ->where('consultation_products.consulation_id',$id)->where('consultation_products.status',1)->get();
+            foreach($consultations['products'] as $product){
+                $product_image = ProductImages::where('product_id',$product['product_id'])->get();
+                $product['product_image']=$product_image;
+                $product['concern']=ProductAssociatedConcernMapping::join('product_associated_types','product_associated_types.id','product_associated_concern_mapping.product_concern_id')
+                ->where('product_associated_concern_mapping.product_id',$product['product_id'])->where('product_associated_types.associated_type',1)->get();
+                $product['condition']=ProductAssociatedConcernMapping::join('product_associated_types','product_associated_types.id','product_associated_concern_mapping.product_concern_id')
+                ->where('product_associated_concern_mapping.product_id',$product['product_id'])->where('product_associated_types.associated_type',2)->get();
+            }
+            $msg = '';
+            $status = false;
+        }else{
+            // $consultations['files']= []; 
+            $msg = 'Details Not available';
+            $status = true;
+        }
+        return Helper::constructResponse($status,$msg,200,['consultation_detail'=>$consultations]);
+
     }
 
     public function generateCar($formdata,$id){
