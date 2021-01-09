@@ -211,7 +211,7 @@ class BusinessLogicService
                 ->where('product_associated_concern_mapping.product_id',$product['product_id'])->where('product_associated_types.associated_type',2)->get();
             }
             // getting consulation question 
-            if($consultations['consultant_status'] == 1 || $consultations['consultant_status'] == 2){
+            if($consultations['consultant_status'] == 1 || $consultations['consultant_status'] == 2 || $consultations['consultant_status'] == 3){
                 $ques_answer=QuesAnswerConsultant::select('ques_id','option_id','question_for_admin','answer_for_admin','product_associated_type_id','id')->where('consultant_id',$consultations['id'])
                 //->where('ques_answer_status',1)
                 ->orderby('id','asc')
