@@ -279,6 +279,11 @@ class AdminController extends Controller
         return response()->json($response);
     }
 
+    public function recommendedProducts(Request $request){
+        $response = $this->businessLogicServiceObject->recommendedProducts($request->all());
+        return response()->json($response);
+    }
+
 
 
 
