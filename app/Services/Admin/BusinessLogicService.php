@@ -212,7 +212,7 @@ class BusinessLogicService
             }
             // getting consulation question 
             if($consultations['consultant_status'] == 1 || $consultations['consultant_status'] == 2){
-                $ques_answer=QuesAnswerConsultant::select('ques_id','option_id','question_for_admin','answer_for_admin')->where('consultant_id',$consultations['id'])
+                $ques_answer=QuesAnswerConsultant::select('ques_id','option_id','question_for_admin','answer_for_admin','product_associated_type_id','id')->where('consultant_id',$consultations['id'])
                 //->where('ques_answer_status',1)
                 ->orderby('id','asc')
                 ->get();
@@ -230,6 +230,7 @@ class BusinessLogicService
         return Helper::constructResponse($status,$msg,200,['consultation_detail'=>$consultations]);
 
     }
+
 
     public function generateCar($formdata,$id){
         $consultation = Consultant::where('id',$id)->first(); 
