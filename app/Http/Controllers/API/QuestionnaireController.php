@@ -363,7 +363,7 @@ class QuestionnaireController extends Controller
                 $consultations['gender']= "Others";
             }
             $consultations['email']= $request->user->email;
-            $consultations['car_report_response']='ssss';
+            $consultations['car_report_response']=$consultations->car_report_response;
             $consultations['products']=[];
             $consultations['is_initial_meeting_done']=false;
             $consultations['is_followup_meeting_done']=false;
