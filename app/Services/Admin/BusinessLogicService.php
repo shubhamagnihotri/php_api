@@ -155,7 +155,7 @@ class BusinessLogicService
                 $consultations['gender']= "Others";
             }
             $consultations['email']= $consultations->email;
-            $consultations['car_report_response']='';
+            $consultations['car_report_response']=$consultations->car_report_response;
             $consultations['products']=[];
             $consultations['is_initial_meeting_done']=false;
             $consultations['is_followup_meeting_done']=false;
