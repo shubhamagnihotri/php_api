@@ -268,12 +268,13 @@ class BusinessLogicService
         }
     }
 
-    public function addConsultationNotes($formdata,$id){
+    public function addConsultationNotes($formdata,$id,$user_id){
         $inserted_data = [
             'consultation_id'=>$id,
             'note_type'=>$formdata['note_type'],
             'condition_id'=>$formdata['condition_id'],
             'consultation_note'=>$formdata['consultation_note'],
+            'created_by'=>$user_id
         ];
         ConsultationNotes::insert($inserted_data);
         return Helper::constructResponse(false,'Notes added successfully',200,[]);

@@ -54,7 +54,8 @@ class AdminController extends Controller
         if ($isValidationFailed) {
             return response()->json($isValidationFailed, 400);
         }
-        $response = $this->businessLogicServiceObject->addConsultationNotes($request->all(),$id);
+        $user_id=$request->user->id;
+        $response = $this->businessLogicServiceObject->addConsultationNotes($request->all(),$id,$user_id);
         return response()->json($response);
 
     }
