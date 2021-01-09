@@ -210,6 +210,10 @@ class BusinessLogicService
                 $product['condition']=ProductAssociatedConcernMapping::join('product_associated_types','product_associated_types.id','product_associated_concern_mapping.product_concern_id')
                 ->where('product_associated_concern_mapping.product_id',$product['product_id'])->where('product_associated_types.associated_type',2)->get();
             }
+            //notes
+            $consultations['notes']= ConsultationNotes::select('consultation_notes.id','consultation_notes.note_type','consultation_notes.condition_id','consultation_notes.consultation_note','consultation_notes.created_by','users.fname','users.lname')->leftjoin('users','users.id','consultation_notes.created_by')
+            ->get();
+
             // getting consulation question 
             if($consultations['consultant_status'] == 1 || $consultations['consultant_status'] == 2 || $consultations['consultant_status'] == 3){
                 $ques_answer=QuesAnswerConsultant::select('ques_id','option_id','question_for_admin','answer_for_admin','product_associated_type_id','id')->where('consultant_id',$consultations['id'])
@@ -264,12 +268,13 @@ class BusinessLogicService
         }
     }
 
-    public function addConsultationNotes($formdata,$id){
+    public function addConsultationNotes($formdata,$id,$user_id){
         $inserted_data = [
             'consultation_id'=>$id,
             'note_type'=>$formdata['note_type'],
             'condition_id'=>$formdata['condition_id'],
             'consultation_note'=>$formdata['consultation_note'],
+            'created_by'=>$user_id
         ];
         ConsultationNotes::insert($inserted_data);
         return Helper::constructResponse(false,'Notes added successfully',200,[]);
@@ -1061,6 +1066,10 @@ class BusinessLogicService
             return Helper::constructResponse(true,'Question not found',401,[]);
         }
        
+    }
+
+    public function recommendedProducts($ques_id){
+      
     }
 
 

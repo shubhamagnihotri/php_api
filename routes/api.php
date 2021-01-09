@@ -73,6 +73,9 @@ Route::group(['middleware' => ['verify.authUser']], function(){
     // get available appointmnet slots
     Route::match(['POST'],'get_consultation_slots','API\QuestionnaireController@getConsultationSlots');
 
+    Route::post('price_plans/{id}','API\PaymentController@pricePlans');
+
+
 });
 //close verify.authUser middleware 
 
@@ -86,7 +89,11 @@ Route::group(['prefix' => 'admin'], function(){
     Route::post('generate_password','API\OnboardingController@generatePassword');
     Route::post('forget_password','API\OnboardingController@forgetPassword');
     Route::post('update_forget_password','API\OnboardingController@updateForgetPassword');
+
+    
 });
+
+
 
 // for admin console apis
 Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function(){
@@ -100,7 +107,7 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::post('get_consultation_count','API\AdminController@getConsultationCount');
 
     Route::get('get_consultation_queue/{id}','API\AdminController@getConsultationFullDetail');
-    
+
     Route::post('generate_car/{id}','API\AdminController@generateCar');
     Route::post('add_consultation_notes/{id}','API\AdminController@addConsultationNotes');
     Route::get('get_generated_car_detail/{id}','API\AdminController@getGeneratedCarDetail');
@@ -142,6 +149,8 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::get('get_ques_linking_questions','API\AdminController@getQuesLinkingQuestions');
     Route::delete('delete_question/{id}','API\AdminController@deleteQuestion');
 
+    // recommended product 
+    Route::post('recommended_products','API\AdminController@recommendedProducts');
 });
 
 
