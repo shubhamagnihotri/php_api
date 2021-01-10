@@ -308,7 +308,7 @@ class BusinessLogicService
 
 
     public function getUsersData($formData){
-       $user=  User::select('users.id','users.fname','users.lname','users.email','users.gender','users.gender','users.profile_status')
+       $user=  User::select('users.id','users.date_of_birth','users.fname','users.lname','users.email','users.gender','users.gender','users.profile_status','users.profile_image')
        ->join('user_roles','users.id','user_roles.user_id')->join('roles','roles.id','user_roles.role_id');
        if(isset($formData['search_by_text'])){
             $user= $user->where('users.fname','like','%'.$formData['search_by_text'].'%')
@@ -322,6 +322,18 @@ class BusinessLogicService
         }
        
         $user= $user->orderBy('users.id','desc')->get();
+        foreach($user as $u){
+            $u['age'] = date_diff(date_create($u['date_of_birth']), date_create('today'))->y;
+            if($u['gender'] == 'f'){
+                $u['gender']= "Female"; 
+            }else if($u['gender'] == 'm'){
+                $u['gender']= "Male";
+            }else if($u['gender'] == 't'){
+                $u['gender']= "Transgender";
+            }else{
+                $u['gender']= "Others";
+            }
+        }
        return Helper::constructResponse(false,'',200, $user);
 
     }
@@ -1088,6 +1100,8 @@ class BusinessLogicService
         }
         return Helper::constructResponse(false,'',200,$query);
     }
+
+
 
 
 
