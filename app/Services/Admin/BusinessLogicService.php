@@ -342,6 +342,18 @@ class BusinessLogicService
         $user=  User::select('users.id','users.date_of_birth','users.fname','users.lname','users.email','users.gender','users.gender','users.profile_status','users.ethinicity','users.mobile_number','users.address','users.zip_code','users.profile_image','country_states.state_name','countries.country_name','countries.country_short_name')
         ->join('countries','countries.id','users.country') 
         ->join('country_states','country_states.id','users.state')->where('users.id',$id)->first();
+        if($user){
+            if($user->gender == 'f'){
+                $user->gender= "Female"; 
+            }else if($user->gender == 'm'){
+                $user->gender= "Male";
+            }else if($user->gender == 't'){
+                $user->gender= "Transgender";
+            }else{
+                $$user->gender= "Others";
+            }
+        }
+      
         $cosultation= Consultant::where('user_id',$id)->where('consultant_status','!=','0')->orderBy('id','desc')->get();
         $user->cosultation = $cosultation; 
         // $user= $user->orderBy('users.id','desc')->get();
