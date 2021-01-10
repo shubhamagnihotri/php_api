@@ -1068,8 +1068,8 @@ class BusinessLogicService
        
     }
 
-    public function recommendedProducts($ques_id){
-      
+    public function recommendedProducts($fromData){
+        
     }
 
 

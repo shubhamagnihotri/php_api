@@ -33,8 +33,8 @@ class PaymentController extends UtilityController
     public function pricePlans(Request $request,$id){
       $formdata = $request->all();
         $apiResponse=$this->businessLogicServiceObject->getPricePlans($formdata,$id);
-        $response = Helper::constructResponse(true,'Success',200,$apiResponse);
-        return response()->json($response,200);
+        // $response = Helper::constructResponse(false,'Success',200,$apiResponse);
+        return response()->json($apiResponse,200);
      }
 
 
