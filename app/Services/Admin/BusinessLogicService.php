@@ -1061,7 +1061,7 @@ class BusinessLogicService
         if($ques){
             $option= DB::table('ques_options')->where('option_ques_id',$ques_id)->delete();
            
-            return Helper::constructResponse(true,'Question deleted',401,[]);
+            return Helper::constructResponse(false,'Question deleted',200,[]);
         }else{
             return Helper::constructResponse(true,'Question not found',401,[]);
         }
@@ -1069,7 +1069,24 @@ class BusinessLogicService
     }
 
     public function recommendedProducts($fromData){
-        
+        if(isset($fromData['condition_id'])){
+            $query = Product::select('products.id','products.product_title','products.product_url')->join('product_associated_concern_mapping as concern','concern.product_id','products.id')->join('product_associated_concern_mapping as condition','condition.product_id','products.id')
+            ->where('concern.product_concern_id',$fromData['concern_id'])
+            ->where('condition.product_concern_id',$fromData['condition_id'])->get();
+            // dd($query);
+        }else{
+            $query = Product::select('products.id','products.product_title','products.product_url')->join('product_associated_concern_mapping as concern','concern.product_id','products.id')->where('concern.product_concern_id',$fromData['concern_id'])->get();
+        }
+        foreach( $query as $value){
+           
+            $productimages= ProductImages::select('product_image_url')->where('id',$value['id'])->first();
+            if($productimages){
+                $value['product_images'] =  $productimages->product_image_url;
+            }else{
+                $value['product_images'] = '';
+            }
+        }
+        return Helper::constructResponse(false,'',200,$query);
     }
 
 
