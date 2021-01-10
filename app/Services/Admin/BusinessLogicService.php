@@ -310,10 +310,9 @@ class BusinessLogicService
     public function getUsersData($formData){
        $user=  User::select('users.id','users.date_of_birth','users.fname','users.lname','users.email','users.gender','users.gender','users.profile_status','users.profile_image')
        ->join('user_roles','users.id','user_roles.user_id')->join('roles','roles.id','user_roles.role_id');
-       if(isset($formData['search_by_text'])){
+       if(isset($formData['search_by_text']) && !empty($formData['search_by_text'])){
             $user= $user->where('users.fname','like','%'.$formData['search_by_text'].'%')
             ->orWhere('users.lname','like','%'.$formData['search_by_text'].'%');
-          
         }
         $user= $user->where('roles.role_name','user')->where('users.profile_status',1)->orWhere('users.profile_status',2);
         if(isset($formData['page'])){
@@ -340,7 +339,7 @@ class BusinessLogicService
 
 
     public function getUserDetail($formData,$id){
-        $user=  User::select('users.id','users.fname','users.lname','users.email','users.gender','users.gender','users.profile_status','users.ethinicity','users.mobile_number','users.address','users.zip_code','users.profile_image','country_states.state_name','countries.country_name','countries.country_short_name')
+        $user=  User::select('users.id','users.date_of_birth','users.fname','users.lname','users.email','users.gender','users.gender','users.profile_status','users.ethinicity','users.mobile_number','users.address','users.zip_code','users.profile_image','country_states.state_name','countries.country_name','countries.country_short_name')
         ->join('countries','countries.id','users.country') 
         ->join('country_states','country_states.id','users.state')->where('users.id',$id)->first();
         $cosultation= Consultant::where('user_id',$id)->where('consultant_status','!=','0')->orderBy('id','desc')->get();
