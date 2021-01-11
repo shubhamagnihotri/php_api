@@ -417,48 +417,143 @@ class BusinessLogicService
 
 
      public function getProductByConcern($formData,$id){
-         $condition_array[]= ['pat.associated_type','=','2'];
-         if(isset($formData['product_status']) && $formData['product_status'] == '1' || $formData['product_status'] == '0'){
-            $condition_array[]= ['products.product_status','=',$formData['product_status']];
-         }
-        $all_condition_product = Product::join('product_associated_concern_mapping as pacm','products.id','pacm.product_id')
-        ->join('product_associated_types as pat','pat.id','pacm.product_concern_id')
-        ->where($condition_array);
-        if(isset($formData['search_by_text'])){
-         $all_condition_product= $all_condition_product->where('products.product_title','like','%'.$formData['search_by_text'].'%')
-            ->orWhere('pat.type_title','like','%'.$formData['search_by_text'].'%');
+
+        $extreme = Product::select('products.id','products.product_url','products.product_status','products.id','products.product_title','products.product_url')
+        ->join('product_associated_concern_mapping as concern','concern.product_id','products.id')
+        ->join('product_associated_concern_mapping as condition','condition.product_id','products.id');
+
+        if(isset($formData['product_status']) && ($formData['product_status']== 1 || $formData['product_status']== 0)){
+            $extreme=  $extreme->where('products.product_status',$id);
         }
+        if(isset($formData['search_by_text']) && (!empty($formData['search_by_text']))){
+            $extreme=  $extreme->where('products.product_title','like','%'.$formData['search_by_text'].'%');
+        }
+        $extreme= $extreme->where('concern.product_concern_id',$id)
+        ->where('condition.product_concern_id',5)
+        ->get();
+
+        $moderate_extreme = Product::select('products.id','products.product_url','products.product_status','products.id','products.product_title','products.product_url')
+        ->join('product_associated_concern_mapping as concern','concern.product_id','products.id')
+        ->join('product_associated_concern_mapping as condition','condition.product_id','products.id');
+
+        if(isset($formData['product_status']) && ($formData['product_status']== 1 || $formData['product_status']== 0)){
+            $moderate_extreme=  $moderate_extreme->where('products.product_status',$id);
+        }
+        if(isset($formData['search_by_text']) && (!empty($formData['search_by_text']))){
+            $moderate_extreme=  $moderate_extreme->where('products.product_title','like','%'.$formData['search_by_text'].'%');
+        }
+        $moderate_extreme= $moderate_extreme->where('concern.product_concern_id',$id)
+        ->where('condition.product_concern_id',6)
+        ->get();
+
+        $low_extreme = Product::select('products.id','products.product_url','products.product_status','products.id','products.product_title','products.product_url')
+        ->join('product_associated_concern_mapping as concern','concern.product_id','products.id')
+        ->join('product_associated_concern_mapping as condition','condition.product_id','products.id');
+
+        if(isset($formData['product_status']) && ($formData['product_status']== 1 || $formData['product_status']== 0)){
+            $low_extreme=  $low_extreme->where('products.product_status',$id);
+        }
+        if(isset($formData['search_by_text']) && (!empty($formData['search_by_text']))){
+            $low_extreme=  $low_extreme->where('products.product_title','like','%'.$formData['search_by_text'].'%');
+        }
+        $low_extreme= $low_extreme->where('concern.product_concern_id',$id)
+        ->where('condition.product_concern_id',7)
+        ->get();
+
         
-        $all_condition_product= $all_condition_product->get();
-        $result=[];
-        $result['extreme']=[];
-        $result['moderate_extreme']=[];
-        $result['low_extreme']=[];
-        $result['nominal']=[];
-        foreach( $all_condition_product as $crp){
-            $is_product_avaialble = Product::join('product_associated_concern_mapping','product_associated_concern_mapping.product_id','products.id')->where('product_associated_concern_mapping.product_id',$crp['product_id'])
-            ->where('product_associated_concern_mapping.product_concern_id',$id)->first();
-         
-            if($is_product_avaialble){
-                $product_images = ProductImages::where('product_id',$crp['product_id'])->get();
-                $crp['product_images'] =$product_images;
-              // dd( $crp['product_concern_id']);
-                if($crp['product_concern_id'] == '5'){
-                    array_push($result['extreme'], $crp);
-                }
-                if($crp['product_concern_id'] == '6'){
-                    array_push($result['moderate_extreme'], $crp);
-                }
-                if($crp['product_concern_id'] == '7'){
-                    array_push($result['low_extreme'], $crp);
-                }
-                if($crp['product_concern_id'] == '8'){
-                    array_push($result['nominal'], $crp);
-                }
+        $nominal = Product::select('products.id','products.product_url','products.product_status','products.id','products.product_title','products.product_url')
+        ->join('product_associated_concern_mapping as concern','concern.product_id','products.id')
+        ->join('product_associated_concern_mapping as condition','condition.product_id','products.id');
+
+        if(isset($formData['product_status']) && ($formData['product_status']== 1 || $formData['product_status']== 0)){
+            $nominal=  $nominal->where('products.product_status',$id);
+        }
+        if(isset($formData['search_by_text']) && (!empty($formData['search_by_text']))){
+            $nominal=  $nominal->where('products.product_title','like','%'.$formData['search_by_text'].'%');
+        }
+        $nominal= $nominal->where('concern.product_concern_id',$id)
+        ->where('condition.product_concern_id',8)
+        ->get();
+        $products=['extreme'=>$extreme,'moderate_extreme'=>$moderate_extreme,
+            'low_extreme'=>$low_extreme,'nominal'=>$nominal];
+        $productsKey =['extreme','moderate_extreme','low_extreme','nominal'];
+        for($i=0;$i<count($productsKey);$i++){
+            $loopArray=$productsKey[$i];
+            // dd($products[$loopArray]);
+            foreach($products[$loopArray] as $key=>$product){
+             
+            $proImage= ProductImages::select('product_image_url')->where('product_id',$product['id'])->whereNotNull('product_image_url')->first();
+            if($proImage){
+                    $product['prdouct_image']=$proImage->product_image_url;
+            }else{
+                    $product['prdouct_image']='';
             }
 
+            }
         }
-        return Helper::constructResponse(false,'Product Detail fetched Successfully',200,$result);
+        // dd( count($extreme));
+        return Helper::constructResponse(false,'Product Detail fetched Successfully',200,$products);
+        // $moderate_extreme = Product::select('products.id','products.product_title','products.product_url')->join('product_associated_concern_mapping as concern','concern.product_id','products.id')->join('product_associated_concern_mapping as condition','condition.product_id','products.id');
+        
+        // if(isset($formData['product_status']) && ($formData['product_status']== 1 || $formData['product_status']== 0)){
+        //     $extreme=  $extreme->where('products.product_status',$id);
+        // }
+        // if(isset($formData['search_by_text']) && (!empty($formData['search_by_text']))){
+        //     $extreme=  $extreme->where('products.product_title','like','%'.$formData['search_by_text'].'%');
+        // }
+        // $moderate_extreme= $moderate_extreme->where('concern.product_concern_id',$id)
+        // ->where('condition.product_concern_id',6)->get();
+
+
+        // $low_extreme = Product::select('products.id','products.product_title','products.product_url')->join('product_associated_concern_mapping as concern','concern.product_id','products.id')->join('product_associated_concern_mapping as condition','condition.product_id','products.id')
+        // ->where('concern.product_concern_id',$id)
+        // ->where('condition.product_concern_id',7)->get();
+        // $nominal = Product::select('products.id','products.product_title','products.product_url')->join('product_associated_concern_mapping as concern','concern.product_id','products.id')->join('product_associated_concern_mapping as condition','condition.product_id','products.id')
+        // ->where('concern.product_concern_id',$id)
+        // ->where('condition.product_concern_id',8)->get();
+
+        //  $condition_array[]= ['pat.associated_type','=','2'];
+        //  if(isset($formData['product_status']) && $formData['product_status'] == '1' || $formData['product_status'] == '0'){
+        //     $condition_array[]= ['products.product_status','=',$formData['product_status']];
+        //  }
+        // $all_condition_product = Product::join('product_associated_concern_mapping as pacm','products.id','pacm.product_id')
+        // ->join('product_associated_types as pat','pat.id','pacm.product_concern_id')
+        // ->where($condition_array);
+        // if(isset($formData['search_by_text'])){
+        //  $all_condition_product= $all_condition_product->where('products.product_title','like','%'.$formData['search_by_text'].'%')
+        //     ->orWhere('pat.type_title','like','%'.$formData['search_by_text'].'%');
+        // }
+        
+        // $all_condition_product= $all_condition_product->get();
+        // $result=[];
+        // $result['extreme']=[];
+        // $result['moderate_extreme']=[];
+        // $result['low_extreme']=[];
+        // $result['nominal']=[];
+        // foreach( $all_condition_product as $crp){
+        //     $is_product_avaialble = Product::join('product_associated_concern_mapping','product_associated_concern_mapping.product_id','products.id')->where('product_associated_concern_mapping.product_id',$crp['product_id'])
+        //     ->where('product_associated_concern_mapping.product_concern_id',$id)->first();
+         
+        //     if($is_product_avaialble){
+        //         $product_images = ProductImages::where('product_id',$crp['product_id'])->get();
+        //         $crp['product_images'] =$product_images;
+        //       // dd( $crp['product_concern_id']);
+        //         if($crp['product_concern_id'] == '5'){
+        //             array_push($result['extreme'], $crp);
+        //         }
+        //         if($crp['product_concern_id'] == '6'){
+        //             array_push($result['moderate_extreme'], $crp);
+        //         }
+        //         if($crp['product_concern_id'] == '7'){
+        //             array_push($result['low_extreme'], $crp);
+        //         }
+        //         if($crp['product_concern_id'] == '8'){
+        //             array_push($result['nominal'], $crp);
+        //         }
+        //     }
+
+        // }
+        // return Helper::constructResponse(false,'Product Detail fetched Successfully',200,$result);
      }
 
      public function updateProductStatus($formdata,$id){
