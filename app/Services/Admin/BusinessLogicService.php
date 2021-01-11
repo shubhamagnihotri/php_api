@@ -458,7 +458,7 @@ class BusinessLogicService
             }
 
         }
-        return Helper::constructResponse(true,'Product Detail fetched Successfully',200,$result);
+        return Helper::constructResponse(false,'Product Detail fetched Successfully',200,$result);
      }
 
      public function updateProductStatus($formdata,$id){
