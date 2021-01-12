@@ -691,7 +691,11 @@ class BusinessLogicService
 
     public function addAdminAppointment($formData){
         $converted_time = date("H:i:s", strtotime($formData['appointment_time']));
+        $end_time=  date("H:i:s", strtotime('+'.$formData['appointment_duration'].' minutes', strtotime($converted_time)));
+        // $end_time=  date("H:i:s", strtotime('+10 minutes', strtotime($converted_time)));
+
         $insert_data = ['appointment_title'=>$formData['appointment_title'],'appointment_date'=>$formData['appointment_date'],'appointment_time'=>$converted_time,'appointment_type'=>$formData['appointment_type'],'appointment_duration'=>$formData['appointment_duration'],
+        'appointment_end_time'=>$end_time,
         'created_at' => date("Y-m-d H:i:s")];
      
         $inserted= AdminAppointement::insert($insert_data);
