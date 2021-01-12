@@ -354,7 +354,15 @@ class BusinessLogicService
             }
         }
       
-        $cosultation= Consultant::where('user_id',$id)->where('consultant_status','!=','0')->orderBy('id','desc')->get();
+        $cosultation= Consultant::where('user_id',$id)
+        //->where('consultant_status','!=','0')
+        ->where(function($query){
+            return $query
+            ->orWhere('consultations.consultant_status', '=', 1)
+            ->orWhere('consultations.consultant_status', '=', 2)
+            ->orWhere('consultations.consultant_status', '=', 3);
+        })
+        ->orderBy('id','desc')->get();
         $user->cosultation = $cosultation; 
         // $user= $user->orderBy('users.id','desc')->get();
         return Helper::constructResponse(false,'',200, $user);
@@ -623,8 +631,19 @@ class BusinessLogicService
 
     public function getProductRelatedConsulation($formData,$id){
         $Consultant = Consultant::select('consultations.*','users.fname','users.lname','users.email','users.ethinicity','users.gender','users.date_of_birth')->join('users','users.id','consultations.user_id')
-        ->join('consultation_products','consultation_products.consulation_id','consultations.id')
-        ->where('consultations.consultant_status','!=','0')
+        ->leftjoin('consultation_products','consultation_products.consulation_id','consultations.id')
+        // ->where('consultations.consultant_status','!=','0')
+        // ->where([
+        //     ['consultations.consultant_status', '=',1],
+        //     ['consultations.consultant_status', '=',2],
+        //     ['consultations.consultant_status', '=',3],
+        // ])
+        ->where(function($query){
+            return $query
+            ->orWhere('consultations.consultant_status', '=', 1)
+            ->orWhere('consultations.consultant_status', '=', 2)
+            ->orWhere('consultations.consultant_status', '=', 3);
+        })
         ->where('consultation_products.product_id',$id)
         ->orderBy('consultations.id','desc');
         
@@ -634,6 +653,7 @@ class BusinessLogicService
             $Consultant = $Consultant->offset($start_limit)->limit($formData['no_of_record']);
         }
         $Consultant=$Consultant->get();
+        // dd($Consultant);
         foreach($Consultant as $consult){
             if($consult['gender'] == 'f'){
                 $consult['gender']= "Female"; 
@@ -646,11 +666,17 @@ class BusinessLogicService
             }
             $consult['age'] = date_diff(date_create($consult['date_of_birth']), date_create('today'))->y;
         }
-        $count =Consultant::join('users','users.id','consultations.user_id')
-        ->where('consultations.consultant_status','!=','0')
-        ->orderBy('consultations.id','desc')->get()->count();
+        // $count =Consultant::join('users','users.id','consultations.user_id')
+        // ->where(function($query){
+        //     return $query
+        //     ->orWhere('consultations.consultant_status', '=', 1)
+        //     ->orWhere('consultations.consultant_status', '=', 2)
+        //     ->orWhere('consultations.consultant_status', '=', 3);
+        // })
+        // ->where('consultations.consultant_status','!=','0')
+        // ->orderBy('consultations.id','desc')->get()->count();
         
-        return Helper::constructResponse(false,'',200,['Consultant'=>$Consultant,'count'=>$count]);
+        return Helper::constructResponse(false,'',200,['Consultant'=>$Consultant,'count'=>count($Consultant)]);
     }
 
     public function deleteProductById($formData,$id){
