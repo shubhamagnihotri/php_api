@@ -577,7 +577,7 @@ class BusinessLogicService
             $product['product_images']= $product_images ;
         }
      
-         return Helper::constructResponse(true,'',200,$product);
+         return Helper::constructResponse(false,'',200,$product);
         
       }
 
