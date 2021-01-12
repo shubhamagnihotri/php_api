@@ -350,7 +350,7 @@ class BusinessLogicService
             }else if($user->gender == 't'){
                 $user->gender= "Transgender";
             }else{
-                $$user->gender= "Others";
+                $user->gender= "Others";
             }
         }
       
@@ -622,7 +622,7 @@ class BusinessLogicService
     }
 
     public function getProductRelatedConsulation($formData,$id){
-        $Consultant = Consultant::select('consultations.*','users.fname','users.lname','users.email','users.ethinicity')->join('users','users.id','consultations.user_id')
+        $Consultant = Consultant::select('consultations.*','users.fname','users.lname','users.email','users.ethinicity','users.gender','users.date_of_birth')->join('users','users.id','consultations.user_id')
         ->join('consultation_products','consultation_products.consulation_id','consultations.id')
         ->where('consultations.consultant_status','!=','0')
         ->where('consultation_products.product_id',$id)
@@ -634,6 +634,18 @@ class BusinessLogicService
             $Consultant = $Consultant->offset($start_limit)->limit($formData['no_of_record']);
         }
         $Consultant=$Consultant->get();
+        foreach($Consultant as $consult){
+            if($consult['gender'] == 'f'){
+                $consult['gender']= "Female"; 
+            }else if($consult['gender'] == 'm'){
+                $consult['gender']= "Male";
+            }else if($consult['gender'] == 't'){
+                $consult['gender']= "Transgender";
+            }else{
+                $consult['gender']= "Others";
+            }
+            $consult['age'] = date_diff(date_create($consult['date_of_birth']), date_create('today'))->y;
+        }
         $count =Consultant::join('users','users.id','consultations.user_id')
         ->where('consultations.consultant_status','!=','0')
         ->orderBy('consultations.id','desc')->get()->count();
