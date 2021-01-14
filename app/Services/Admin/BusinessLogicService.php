@@ -710,13 +710,18 @@ class BusinessLogicService
 
         if($formData['appointment_type'] == 'admin'){
             $appointment_detail= AdminAppointement::where('id',$id)->first();
+            if( $appointment_detail){
+                $appointment_detail->appointment_by = 'admin';
+            }
         }
         if($formData['appointment_type'] == 'user'){
-            $appointment_detail=  Consultant::select('appointments.id','appointments.appointment_date','appointments.appointment_time','appointments.appointment_type','appointment_prices.appointment_duration','appointment_prices.appointment_type_name',DB::raw('CONCAT(users.fname," ",users.lname) AS fullname'),'appointments.created_at','appointments.updated_at')->join('appointments','appointments.consultation_id','consultations.id')->join('users','users.id','appointments.user_id')
-           ->join('appointment_prices','appointment_prices.id','appointments.appointment_type')
-            ->where('appointments.id',$id)->first();
+            $appointment_detail= Appointment::select('appointments.id','appointments.appointment_date','appointments.appointment_time','appointments.appointment_end_time','appointments.appointment_type','appointments.appointment_duration',DB::raw('CONCAT(users.fname," ",users.lname) AS fullname'))->join('users','users.id','appointments.user_id')->where('appointments.id',$id)->first();
+        //     $appointment_detail=  Consultant::select('appointments.id','appointments.appointment_date','appointments.appointment_time','appointments.appointment_type','appointment_prices.appointment_duration','appointment_prices.appointment_type_name',DB::raw('CONCAT(users.fname," ",users.lname) AS fullname'),'appointments.created_at','appointments.updated_at')->join('appointments','appointments.consultation_id','consultations.id')->join('users','users.id','appointments.user_id')
+        //    ->join('appointment_prices','appointment_prices.id','appointments.appointment_type')
+        //     ->where('appointments.id',$id)->first();
             if($appointment_detail){
-                $appointment_detail['appointment_title'] = 'Consultation meeting with '.$appointment_detail['fullname'];      
+                $appointment_detail['appointment_title'] = 'Consultation meeting with '.$appointment_detail['fullname']; 
+                $appointment_detail['appointment_by']= 'user';     
                 unset($appointment_detail['fullname']); 
             }
            
@@ -779,94 +784,172 @@ class BusinessLogicService
     }
 
 
+    // public function getAppointments($formData){
+
+    //     if($formData['search_by'] == 'month' || $formData['search_by'] == 'week' || $formData['search_by'] == 'date'){
+    //         if($formData['search_by'] == 'month'){
+    //             $month = $formData['month'];
+    //             $explode_array=explode("-",$month);
+    //             $year = $explode_array[0];
+    //             $mon = $explode_array[1];
+    //             $admin_appointment = AdminAppointement::select('appointment_title','appointment_date','appointment_status','appointment_time','appointment_type','appointment_duration','id as appointment_id')->whereYear('appointment_date','=',$year)
+    //                     ->whereMonth('appointment_date', '=',$mon)->where('appointment_status', '=',1)->get();
+    //         }
+    //         if($formData['search_by'] == 'week' || $formData['search_by'] == 'day'){
+    //             $admin_appointment = AdminAppointement::select('appointment_title','appointment_status','appointment_date','appointment_time','appointment_type','appointment_duration','id as appointment_id')->whereBetween('appointment_date',[$formData['start_week'],$formData['end_week']])->where('appointment_status', '=',1)->get();
+    //             // dd( $admin_appointment[0]['appointment_status']);
+    //         }
+            
+    //          if(count($admin_appointment) > 0){
+    //             foreach($admin_appointment as $app){
+    //                 $str_time = strtotime($app['appointment_time']);
+    //                 $app['appointment_by'] = 'admin';
+    //                 $app['start_time'] = date("h:i A",$str_time);
+    //                 $app['end_time'] = date("h:i A",strtotime("+".$app['appointment_duration']." minutes",$str_time));
+    //             }
+    //          }   
+    //         if($formData['search_by'] == 'month'){
+    //             // dd('ddd');
+    //             $user_appointment = Appointment::select('appointments.appointment_date','appointments.appointment_time','appointments.appointment_type','appointment_prices.appointment_duration','appointments.id as appointment_id',
+    //             DB::raw('CONCAT(users.fname," ",users.lname) AS fullname'))->join('appointment_prices','appointment_prices.id','appointments.appointment_status')->join('consultations','consultations.id','appointments.consultation_id')->join('users','users.id','appointments.user_id')->where('appointments.appointment_status', '=',1)
+    //             ->whereYear('appointments.appointment_date','=',$year)
+    //             ->whereMonth('appointments.appointment_date', '=',$mon)
+    //            ->get();
+    //         }
+    //         if($formData['search_by'] == 'week'){
+    //             $user_appointment = Appointment::select('appointments.appointment_date','appointments.appointment_status','appointments.appointment_time','appointments.appointment_type','appointment_prices.appointment_duration','appointments.id as appointment_id',
+    //             DB::raw('CONCAT(users.fname," ",users.lname) AS fullname'))->join('appointment_prices','appointment_prices.id','appointments.appointment_status')->join('consultations','consultations.id','appointments.consultation_id')->join('users','users.id','appointments.user_id')->where('appointments.appointment_status', '!=',2)
+    //             ->whereBetween('appointments.appointment_date',[$formData['start_week'],$formData['end_week']])->get();
+
+    //         }
+    //          if(count($user_appointment) > 0){
+    //             foreach($user_appointment as $ua){
+    //                 // dd($ua['appointment_status']);
+    //                 $ua['appointment_title'] = 'Consultation meeting with '.$ua['fullname'];      
+    //                 unset($ua['fullname']); 
+    //                 $str_time = strtotime($ua['appointment_time']);
+    //                 $ua['appointment_by'] = 'user';
+    //                 $ua['start_time'] = date("h:i A",$str_time);
+    //                 $ua['end_time'] = date("h:i A",strtotime("+".$app['appointment_duration']." minutes",$str_time));
+    //                 // $ua['appointment_status']= $ua['appointment_status'];
+    //                 $admin_appointment[count($admin_appointment)] = $ua;
+                 
+    //             }
+    //          }  
+    //          $result=[];
+    //          if(count($admin_appointment) > 0){
+    //             foreach( $admin_appointment as $ap=>$value){
+    //                 if(count($result) > 0){
+    //                     $is_presented = false;
+    //                     foreach( $result as $key=>$r){
+                            
+    //                         if(isset($value['appointment_date']) && isset($r['appointment_date']) && strtotime($r['appointment_date']) == strtotime($value['appointment_date'])){
+                       
+    //                             $is_presented = true;
+    //                             $result[$key]['data'][] = array('appointment_title'=> $value['appointment_title'],'appointment_date'=>$value['appointment_date'],'appointment_time'=>$value['appointment_time'],'appointment_type'=>$value['appointment_type'],'appointment_duration'=>$value['appointment_duration'],'appointment_id'=>$value['appointment_id'],
+    //                             'appointment_by'=>$value['appointment_by'],
+    //                             'start_time'=>$value['start_time'],
+    //                             'end_time'=>$value['end_time']);
+    //                         }
+    //                     }
+    //                     if(!$is_presented){
+    //                        $count= count($result);
+    //                         $result[$count]['appointment_date'] =  $value['appointment_date'];
+    //                         $result[$count]['data'] = array('appointment_title'=> $value['appointment_title'],'appointment_date'=>$value['appointment_date'],'appointment_time'=>$value['appointment_time'],'appointment_type'=>$value['appointment_type'],'appointment_duration'=>$value['appointment_duration'],'appointment_id'=>$value['appointment_id'],
+    //                         'appointment_by'=>$value['appointment_by'],
+    //                         'start_time'=>$value['start_time'],
+    //                         'end_time'=>$value['end_time']);
+    //                     }
+    //                 }else{
+    //                     $result[0]['appointment_date'] = $value['appointment_date'];
+    //                     $result[0]['data'][] = array('appointment_title'=> $value['appointment_title'],'appointment_date'=>$value['appointment_date'],'appointment_time'=>$value['appointment_time'],'appointment_type'=>$value['appointment_type'],'appointment_duration'=>$value['appointment_duration'],'appointment_id'=>$value['appointment_id'],
+    //                     'appointment_by'=>$value['appointment_by'],
+    //                     'start_time'=>$value['start_time'],
+    //                     'end_time'=>$value['end_time']);
+    //                 }
+    //             }
+    //          }
+        
+    //          return Helper::constructResponse(false,'',200,$result);    
+           
+    //     }
+   
+    // }
+
     public function getAppointments($formData){
 
-        if($formData['search_by'] == 'month' || $formData['search_by'] == 'week'){
+        if($formData['search_by'] == 'month' || $formData['search_by'] == 'week' || $formData['search_by'] == 'date'){
             if($formData['search_by'] == 'month'){
                 $month = $formData['month'];
                 $explode_array=explode("-",$month);
                 $year = $explode_array[0];
                 $mon = $explode_array[1];
-                $admin_appointment = AdminAppointement::select('appointment_title','appointment_date','appointment_time','appointment_type','appointment_duration','id as appointment_id')->whereYear('appointment_date','=',$year)
-                        ->whereMonth('appointment_date', '=',$mon)->where('appointment_status', '!=',2)->get();
+                $admin_appointment = DB::table('admin_appointments')->select('appointment_title','appointment_date','appointment_status','appointment_time','appointment_end_time','appointment_type','id as appointment_id')->whereYear('appointment_date','=',$year)
+                ->whereMonth('appointment_date', '=',$mon)
+                ->where(function($query){
+                    return $query
+                    ->orWhere('appointment_status', '=', 1)
+                    ->orWhere('appointment_status', '=', 3);
+                   
+                })->get();
+                $user_appointemnt = DB::table('appointments')->select('appointment_date','appointment_status','appointment_end_time','appointment_time','appointment_type','id as appointment_id')->whereYear('appointment_date','=',$year)
+                ->whereMonth('appointment_date', '=',$mon)
+                ->where(function($query){
+                    return $query
+                    ->orWhere('appointment_status', '=', 1)
+                    ->orWhere('appointment_status', '=', 3);
+                   
+                })->get();
+                $index = count($admin_appointment);
+              
+                for($i=1;$i<=count($user_appointemnt);$i++){
+                    $admin_appointment[$index]= $user_appointemnt[$i-1];
+                    $index=$index+1;
+                }
+            
             }
             if($formData['search_by'] == 'week' || $formData['search_by'] == 'day'){
-                $admin_appointment = AdminAppointement::select('appointment_title','appointment_date','appointment_time','appointment_type','appointment_duration','id as appointment_id')->whereBetween('appointment_date',[$formData['start_week'],$formData['end_week']])->where('appointment_status', '!=',2)->get();
-
+                $admin_appointment = DB::table('admin_appointments')->select('appointment_title','appointment_date','appointment_status','appointment_time','appointment_end_time','appointment_type','id as appointment_id')
+                ->whereBetween('appointment_date',[$formData['start_week'],$formData['end_week']])
+                ->where(function($query){
+                    return $query
+                    ->orWhere('appointment_status', '=', 1)
+                    ->orWhere('appointment_status', '=', 3);
+                   
+                })->get();
+              
+                $user_appointemnt = DB::table('appointments')->select('appointment_date','appointment_status','appointment_end_time','appointment_time','appointment_type','id as appointment_id')
+                ->whereBetween('appointment_date',[$formData['start_week'],$formData['end_week']])
+                ->where(function($query){
+                    return $query
+                    ->orWhere('appointment_status', '=', 1)
+                    ->orWhere('appointment_status', '=', 3);
+                   
+                })
+                //->where('appointment_status', '=',1)
+                ->get();
+                $index = count($admin_appointment);
+              
+                for($i=1;$i<=count($user_appointemnt);$i++){
+                    $admin_appointment[$index]= $user_appointemnt[$i-1];
+                    $index=$index+1;
+                }
+             
             }
             
-             if(count($admin_appointment) > 0){
-                foreach($admin_appointment as $app){
-                    $str_time = strtotime($app['appointment_time']);
-                    $app['appointment_by'] = 'admin';
-                    $app['start_time'] = date("h:i A",$str_time);
-                    $app['end_time'] = date("h:i A",strtotime("+".$app['appointment_duration']." minutes",$str_time));
+            foreach($admin_appointment as $value){
+              
+                if(isset($value->appointment_title)){
+                    $value->appointment_by = 'admin';
+                }else{
+                    $value->appointment_by = 'user';
+                    $userdata=DB::table('appointments')->select('users.fname','users.lname')->join('users','appointments.user_id','users.id')->first();
+                    // dd($userdata);
+                    $value->appointment_title = 'Consultation meeting with '.$userdata->fname;
                 }
-             }   
-            if($formData['search_by'] == 'month'){
-                // dd('ddd');
-                $user_appointment = Appointment::select('appointments.appointment_date','appointments.appointment_time','appointments.appointment_type','appointment_prices.appointment_duration','appointments.id as appointment_id',
-                DB::raw('CONCAT(users.fname," ",users.lname) AS fullname'))->join('appointment_prices','appointment_prices.id','appointments.appointment_status')->join('consultations','consultations.id','appointments.consultation_id')->join('users','users.id','appointments.user_id')->where('appointments.appointment_status', '!=',2)
-                ->whereYear('appointments.appointment_date','=',$year)
-                ->whereMonth('appointments.appointment_date', '=',$mon)
-               ->get();
             }
-            if($formData['search_by'] == 'week'){
-                $user_appointment = Appointment::select('appointments.appointment_date','appointments.appointment_time','appointments.appointment_type','appointment_prices.appointment_duration','appointments.id as appointment_id',
-                DB::raw('CONCAT(users.fname," ",users.lname) AS fullname'))->join('appointment_prices','appointment_prices.id','appointments.appointment_status')->join('consultations','consultations.id','appointments.consultation_id')->join('users','users.id','appointments.user_id')->where('appointments.appointment_status', '!=',2)
-                ->whereBetween('appointments.appointment_date',[$formData['start_week'],$formData['end_week']])->get();
-
-            }
-             if(count($user_appointment) > 0){
-                foreach($user_appointment as $ua){
-                    $ua['appointment_title'] = 'Consultation meeting with '.$ua['fullname'];      
-                    unset($ua['fullname']); 
-                    $str_time = strtotime($ua['appointment_time']);
-                    $ua['appointment_by'] = 'user';
-                    $ua['start_time'] = date("h:i A",$str_time);
-                    $ua['end_time'] = date("h:i A",strtotime("+".$app['appointment_duration']." minutes",$str_time));
-                    $admin_appointment[count($admin_appointment)] = $ua;
-                 
-                }
-             }  
-             $result=[];
-             if(count($admin_appointment) > 0){
-                foreach( $admin_appointment as $ap=>$value){
-                    if(count($result) > 0){
-                        $is_presented = false;
-                        foreach( $result as $key=>$r){
-                            
-                            if(isset($value['appointment_date']) && isset($r['appointment_date']) && strtotime($r['appointment_date']) == strtotime($value['appointment_date'])){
-                       
-                                $is_presented = true;
-                                $result[$key]['data'][] = array('appointment_title'=> $value['appointment_title'],'appointment_date'=>$value['appointment_date'],'appointment_time'=>$value['appointment_time'],'appointment_type'=>$value['appointment_type'],'appointment_duration'=>$value['appointment_duration'],'appointment_id'=>$value['appointment_id'],
-                                'appointment_by'=>$value['appointment_by'],
-                                'start_time'=>$value['start_time'],
-                                'end_time'=>$value['end_time']);
-                            }
-                        }
-                        if(!$is_presented){
-                           $count= count($result);
-                            $result[$count]['appointment_date'] =  $value['appointment_date'];
-                            $result[$count]['data'] = array('appointment_title'=> $value['appointment_title'],'appointment_date'=>$value['appointment_date'],'appointment_time'=>$value['appointment_time'],'appointment_type'=>$value['appointment_type'],'appointment_duration'=>$value['appointment_duration'],'appointment_id'=>$value['appointment_id'],
-                            'appointment_by'=>$value['appointment_by'],
-                            'start_time'=>$value['start_time'],
-                            'end_time'=>$value['end_time']);
-                        }
-                    }else{
-                        $result[0]['appointment_date'] = $value['appointment_date'];
-                        $result[0]['data'][] = array('appointment_title'=> $value['appointment_title'],'appointment_date'=>$value['appointment_date'],'appointment_time'=>$value['appointment_time'],'appointment_type'=>$value['appointment_type'],'appointment_duration'=>$value['appointment_duration'],'appointment_id'=>$value['appointment_id'],
-                        'appointment_by'=>$value['appointment_by'],
-                        'start_time'=>$value['start_time'],
-                        'end_time'=>$value['end_time']);
-                    }
-                }
-             }
-        
-             return Helper::constructResponse(false,'',200,$result);    
-           
+             return Helper::constructResponse(false,'',200,$admin_appointment);
         }
-   
     }
 
     public function addQuestion($formData){
