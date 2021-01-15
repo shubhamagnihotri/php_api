@@ -1335,6 +1335,11 @@ class BusinessLogicService
 
 
 
+    public function uploadImage($formData){
+        $path = Storage::disk('s3')->put('Questions',$formData['images']);
+        $path = config("app.aws_bucket_base_url").$path;
+        return Helper::constructResponse(false,'Uploaded',200,['path'=>$path]);
+    }
 
 
 

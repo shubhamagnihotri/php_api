@@ -153,6 +153,8 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::post('recommended_products','API\AdminController@recommendedProducts');
 });
 
+Route::post('upload_image','API\AdminController@uploadImage');
+
 
 });
 //close v1 prefix 
