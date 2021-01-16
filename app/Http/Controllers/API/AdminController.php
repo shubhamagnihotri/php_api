@@ -285,6 +285,13 @@ class AdminController extends Controller
     }
 
 
+    public function uploadImage(Request $request){
+        $response = $this->businessLogicServiceObject->uploadImage($request->all());
+        return response()->json($response);
+    }
+
+
+
 
 
 }
