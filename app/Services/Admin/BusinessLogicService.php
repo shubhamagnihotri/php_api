@@ -342,6 +342,7 @@ class BusinessLogicService
         $user=  User::select('users.id','users.date_of_birth','users.fname','users.lname','users.email','users.gender','users.gender','users.profile_status','users.ethinicity','users.mobile_number','users.address','users.zip_code','users.profile_image','country_states.state_name','countries.country_name','countries.country_short_name')
         ->join('countries','countries.id','users.country') 
         ->join('country_states','country_states.id','users.state')->where('users.id',$id)->first();
+        
         if($user){
             if($user->gender == 'f'){
                 $user->gender= "Female"; 
@@ -363,21 +364,23 @@ class BusinessLogicService
             ->orWhere('consultations.consultant_status', '=', 3);
         })
         ->orderBy('id','desc')->get();
-        $user->cosultation = $cosultation; 
+        if($user && $cosultation){
+            $user->cosultation = $cosultation;
+        }
         // $user= $user->orderBy('users.id','desc')->get();
         return Helper::constructResponse(false,'',200, $user);
  
      }
 
      public function updateProfileStatus($formData,$id){
-        if($formData['status'] != '1' && $formData['status']!='2'){
-            return Helper::constructResponse(true,'changes not possible',401,[]);
-        }
+        // if($formData['status'] != '1' && $formData['status']!='2'){
+        //     return Helper::constructResponse(true,'changes not possible',401,[]);
+        // }
         $isUpdated=User::where('id',$id)->update(['profile_status'=>$formData['status']]);
         if( $isUpdated){
-            return Helper::constructResponse(true,'Status updated Successfully',200, []);
+            return Helper::constructResponse(false,'Status updated Successfully',200, []);
         }else{
-            return Helper::constructResponse(true,'Status not updated',401, []);
+            return Helper::constructResponse(false,'Status not updated',401, []);
         }
      }
 
@@ -567,7 +570,7 @@ class BusinessLogicService
      public function updateProductStatus($formdata,$id){
        $status_update= Product::where('id',$id)->update(['products.product_status'=>$formdata['status']]);
        if( $status_update){
-        return Helper::constructResponse(true,'Product status updated successfully',200,$status_update);
+        return Helper::constructResponse(false,'Product status updated successfully',200,$status_update);
        }
      }
 
