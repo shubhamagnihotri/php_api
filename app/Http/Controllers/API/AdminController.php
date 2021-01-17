@@ -93,10 +93,10 @@ class AdminController extends Controller
 
     
     public function addProduct(Request $request){
-        $isValidationFailed=$this->validationServiceObject->addProductvalidation($request->all());
-        if ($isValidationFailed) {
-            return response()->json($isValidationFailed, 400);
-        }
+        // $isValidationFailed=$this->validationServiceObject->addProductvalidation($request->all());
+        // if ($isValidationFailed) {
+        //     return response()->json($isValidationFailed, 400);
+        // }
         $response = $this->businessLogicServiceObject->addProduct($request->all());
         return response()->json($response);
     }
@@ -122,10 +122,6 @@ class AdminController extends Controller
 
     
     public function updateProductDetail(Request $request,$id){
-        $isValidationFailed=$this->validationServiceObject->updateProductDetailvalidation($request->all());
-        if ($isValidationFailed) {
-            return response()->json($isValidationFailed, 400);
-        }
         $response = $this->businessLogicServiceObject->updateProductDetail($request->all(),$id);
         return response()->json($response);
     }
