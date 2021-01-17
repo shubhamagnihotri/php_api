@@ -423,7 +423,7 @@ class BusinessLogicService
             }
         }
      
-        return Helper::constructResponse(true,'Product added Successfully',200,[]);
+        return Helper::constructResponse(false,'Product added Successfully',200,[]);
      }
 
 
@@ -620,7 +620,7 @@ class BusinessLogicService
             }
         }
      
-        return Helper::constructResponse(true,'Product updated Successfully',200,[]);
+        return Helper::constructResponse(false,'Product updated Successfully',200,[]);
      }
 
     public function deleteProductImage($id){
@@ -685,9 +685,9 @@ class BusinessLogicService
     public function deleteProductById($formData,$id){
         $is_product_deleted = Product::where('id',$id)->delete();
         if($is_product_deleted){
-            return Helper::constructResponse(true,'Product deleted successfully',200,[]);
+            return Helper::constructResponse(false,'Product deleted successfully',200,[]);
         }else{
-            return Helper::constructResponse(false,'Product not deleted',401,[]);
+            return Helper::constructResponse(true,'Product not deleted',401,[]);
         }
     }
 
