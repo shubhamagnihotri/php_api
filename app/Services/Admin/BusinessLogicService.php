@@ -626,7 +626,7 @@ class BusinessLogicService
     public function deleteProductImage($id){
         $is_deleted=ProductImages::where('id',$id)->delete();
         if($is_deleted){
-            return Helper::constructResponse(true,'Product image deleted Successfully',200,[]);
+            return Helper::constructResponse(false,'Product image deleted Successfully',200,[]);
         }else{
             return Helper::constructResponse(true,'Product image not deleted ',401,[]);
         }
