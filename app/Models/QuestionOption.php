@@ -21,4 +21,11 @@ class QuestionOption extends Model
     protected $hidden = [];
     protected $primaryKey = 'id';
     protected $table = 'ques_options';
+
+    public function getOptionOfQuestion($question_id){
+        return QuestionOption::select("id","option_title","option_ques_id","static_page_id","option_image")
+            ->where('option_ques_id',$question_id)
+            ->where('option_status',1)
+            ->get();
+    }
 }
