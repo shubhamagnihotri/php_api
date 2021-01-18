@@ -27,6 +27,7 @@ class UtilityController extends Controller
     // AS f returns 1; m returns 2
     public function getGenderIdByShortCode($gender){
         $gender_id = 0;        
+        $gender = strtolower($gender);
         switch($gender){
             case 'f':
                 $gender_id =1;
@@ -37,7 +38,7 @@ class UtilityController extends Controller
             case 't':
                 $gender_id =3;
                 break;
-            case 't':
+            case 'o':
                 $gender_id =4;
                 break;
         }
