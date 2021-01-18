@@ -1037,6 +1037,10 @@ class BusinessLogicService
         $ques->save();
 
         if($ques->id){
+
+             // update this question linking to previos one
+            $this->updatePreviousQuestionId($ques->id);
+           
             Question::where('id','!=',$ques->id)->update([
                 'is_last_question'=>0
             ]);
@@ -1064,12 +1068,23 @@ class BusinessLogicService
     }
 
     public function newQuestionOrderId(){
-        $ques=Question::where('ques_status',1)->orderBy('ques_ordering_id','desc')
-        ->first();
+        $ques=Question::where('ques_status',1)->orderBy('ques_ordering_id','desc')->first();
         if($ques){
-            return 1;
+            return $ques->ques_ordering_id + 1;
         }else{
-            return $ques->ques_level +1;
+            return 1;
+        }
+    }
+
+    public function updatePreviousQuestionId($quesId){
+        $ques=Question::where('ques_status',1)->where('ques_level',1)
+        ->where('id','!=',$quesId)->orderBy('ques_ordering_id','desc')->first();
+        if($ques){
+            $ques->next_question_id = $quesId;
+            $ques->save();
+            return true;
+        }else{
+            return false;
         }
     }
 
@@ -1260,10 +1275,12 @@ class BusinessLogicService
     }
 
     public function getRootLevelQuestion($formData){
-       $ques= Question::where('ques_parent_option_id','0')
-        ->orderBy('ques_ordering_id','asc')->get();
-        return Helper::constructResponse(false,'Question list Found successfully',200,[$ques]);
-
+        $ques= Question::where('ques_status',1)
+             //->where('ques_level',1)
+            ->orderBy('ques_ordering_id','asc')->get();
+    //    $ques= Question::where('ques_parent_option_id','0')
+    //     ->orderBy('ques_ordering_id','asc')->get();
+        return Helper::constructResponse(false,'Question list Found successfully',200,$ques);
     }
 
     public function updateQuestionLinking($formData){
