@@ -33,14 +33,25 @@ class QuestionnaireController extends UtilityController
 
     public function getQuestionAndSubmitAnswer(Request $request){
         if ($request->isMethod('get')) {
-            $response=$this->getFirstQuestion($request);
+            // $response=$this->getFirstQuestion($request);
+            $response = $this->getNextQuestion(0,0,$request->user);
             return response()->json($response);
         }
         if ($request->isMethod('post')) {
             // getting next question 
-            if($request->input('ques_step') == 'next'){
-                $response= $this->submitQuestionAnswerGetQues($request->all(),$request->user);
+            // if($request->input('ques_step') == 'next'){
+            //     $response= $this->submitQuestionAnswerGetQues($request->all(),$request->user);
+            // }
+            $consultation_id = 0;
+            if(empty($formdata['consultation_id'])){
+                
+                $consultation_id = $this->generateConsultationId($request->user->id);                       
             }
+            $question_option = $this->submitQuestionForm($request->all(),$request->user,$consultation_id);
+            $question_id = $question_option['question_id'];
+            $option_id =  $question_option['option_id'];
+
+            $response = $this->getNextQuestion($question_id,$option_id,$request->user);
            
             return response()->json($response);
         }
@@ -49,7 +60,7 @@ class QuestionnaireController extends UtilityController
 
     // This is a recursive function for getting the next question if condition is not appllied
     public function checkNextQuestionWithCondition($questions,$age,$gender_id)
-    {        
+    {                
         $quesObj = new Question();
         $optionObj = new QuestionOption();        
         if($questions->condition_type){
@@ -73,10 +84,10 @@ class QuestionnaireController extends UtilityController
 
     // This function returns the next question of provided id
     // 0 for first question
-    public function getNextQuestion($questionid = 0,$option_id = 0,Request $request)
+    public function getNextQuestion($questionid = 0,$option_id = 0,$userData)
     {       
-        $gender_code = $request->user->gender;
-        $dob = $request->user->date_of_birth;       
+        $gender_code = $userData->gender;
+        $dob = $userData->date_of_birth;       
         $age = $this->getAgeFromDOB($dob);
         $gender_id =1;// $this->getGenderIdByShortCode($gender_code);        
         
@@ -85,8 +96,8 @@ class QuestionnaireController extends UtilityController
         $questions = array();
 
         if($questionid == 0)
-        {
-            $questions = $quesObj->getFirstQuestion($questionid);
+        {           
+            $questions = $quesObj->getFirstQuestion();
         }
         else{
             
@@ -99,40 +110,22 @@ class QuestionnaireController extends UtilityController
                 $question = $quesObj->getNextQuestionionId($questionid);
                 $next_ques_id = $question->next_question_id;               
                 $questions = $quesObj->getQuestionDetails($next_ques_id);   
-            }
-                              
-        }  
-        
+            }                              
+        }                  
         $questions = $this->checkNextQuestionWithCondition($questions,$age,$gender_id);
         
-        
-        $option= $optionObj->getOptionOfQuestion($questions->id);
-        if(count($option) > 0){
-            foreach($option as $opt){
-               
-                $is_sub_ques =$questions->isChildQuestionOfOption($opt['id']);
-                if($is_sub_ques){
-                    $opt['is_sub_ques_exist'] = true;
-                }else{
-                    $opt['is_sub_ques_exist'] = false;
-                }
-            }
-       }
+        $option=$this->getOptionsOfQuestionId($questions->id);
+                
         return Helper::constructResponse(false,'',200,['ques'=>$questions,'option'=> $option,'consultation_id'=>'']);
     }
 
-    // get first question and option start
-    public function getFirstQuestion($formdata){
-
+    //returns the option list of given question id;
+    public function getOptionsOfQuestionId($question_id){
         $quesObj = new Question();
         $optionObj = new QuestionOption();
-        $ques = $quesObj->getFirstQuestion();        
-        if(!$ques){
-            return Helper::constructResponse(true,'No Question are available',401,[]);
-        }
-       $option= $optionObj->getOptionOfQuestion($ques->id);    
-       if(count($option) > 0){
-            foreach($option as $opt){
+        $option= $optionObj->getOptionOfQuestion($question_id);
+        if(count($option) > 0){
+            foreach($option as $opt){               
                 $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);
                 if($is_sub_ques){
                     $opt['is_sub_ques_exist'] = true;
@@ -141,8 +134,32 @@ class QuestionnaireController extends UtilityController
                 }
             }
        }
-       return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
+       return  $option;
     }
+    
+
+    // get first question and option start
+    // public function getFirstQuestion($formdata){
+
+    //     $quesObj = new Question();
+    //     $optionObj = new QuestionOption();
+    //     $ques = $quesObj->getFirstQuestion();        
+    //     if(!$ques){
+    //         return Helper::constructResponse(true,'No Question are available',401,[]);
+    //     }
+    //    $option= $optionObj->getOptionOfQuestion($ques->id);    
+    //    if(count($option) > 0){
+    //         foreach($option as $opt){
+    //             $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);
+    //             if($is_sub_ques){
+    //                 $opt['is_sub_ques_exist'] = true;
+    //             }else{
+    //                 $opt['is_sub_ques_exist'] = false;
+    //             }
+    //         }
+    //    }
+    //    return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
+    // }
     // get first question and option end
 
 
@@ -152,28 +169,70 @@ class QuestionnaireController extends UtilityController
 
         $quesObj = new Question();
         $optionObj = new QuestionOption();
-
-        $ques = $quesObj->getQuestionDetails($id);
-       // $ques = Question::where('id',1)->where('ques_status',1)->first();
+        $ques = $quesObj->getQuestionDetails($id);       
         if(!$ques){
             return Helper::constructResponse(true,'No Question are available',401,[]);
         }
-       $option= $optionObj->getOptionOfQuestion($ques->id);   
-       if(count($option) > 0){
-            foreach($option as $opt){
-                $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);
-                if($is_sub_ques){
-                    $opt['is_sub_ques_exist'] = true;
-                }else{
-                    $opt['is_sub_ques_exist'] = false;
-                }
-            }
-       }
+        $option=$this->getOptionsOfQuestionId($ques->id);
        return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
     }
     // eo getQuestionDetails
 
-    
+    // Returns the new generated consulted id
+    public function generateConsultationId($user_id){
+        $consultation_data = new Consultant();
+        $consultation_data->user_id = $user_id;
+        $consultation_data->consultant_created_at = date("Y-m-d H:i:s");
+        $consultation_data->consultant_status = 0;
+        $consultation_data->created_at = date("Y-m-d H:i:s");
+        $consultation_data->save();
+        return $consultation_data->id;
+    }//eo generateConsultationId()
+
+    //this function save the answers and 
+    public function submitQuestionForm($formdata,$userData,$consultation_id)
+    {
+        $quesObj = new Question();
+        $optionObj = new QuestionOption();
+        $parent_question_id = 0;
+        $option_id = 0;
+        foreach($formdata['submit_data'] as $form){  
+                    
+            $ques_detail = $quesObj->getQuestionDetails($form['ques_id']);              
+            if(!$ques_detail->is_sub_question)
+            {
+                $parent_question_id = $ques_detail->id;
+            }    
+            $answer_id_string  = 0;
+            $answer_string =   $form['ques_answer'][0];            
+            if($ques_detail->ques_option_type == '1' || $ques_detail->ques_option_type == '2')   
+            {
+                $answerid_array = array();
+                $answer_string_array = array();
+                foreach($form['ques_answer'] as $answer){
+                    if($ques_detail->ques_option_type == '1'){
+                        $option_id = $answer;
+                    }
+                    $answerid_array[] = $answer;
+                    $get_option_detail= QuestionOption::where('id',$answer)->first();                    
+                    if($get_option_detail->option_title){
+                        $answer_string_array[] = $get_option_detail->option_title;                        
+                    }                    
+                }
+                $answer_id_str = implode(",",$answerid_array) ;
+                $answer_string = implode(",",$answer_string_array) ;
+            } 
+            $QuesAnswerConsult = new QuesAnswerConsultant();
+            $QuesAnswerConsult->ques_id = $ques_detail->id;
+            $QuesAnswerConsult->option_id = $answer_id_str; 
+            $QuesAnswerConsult->question_for_admin= $ques_detail->ques_title;
+            $QuesAnswerConsult->answer_for_admin= $answer_string;
+            $QuesAnswerConsult->consultant_id = $consultation_id; 
+            $QuesAnswerConsult->save();
+        };
+        $return_data = array('question_id'=>$parent_question_id,"option_id"=>$option_id);        
+        return $return_data;
+    }//eo submitQuestionForm();
 
     // submit question answer and get next question (Next question )start
     public function submitQuestionAnswerGetQues($formdata,$userData){

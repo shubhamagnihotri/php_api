@@ -26,7 +26,8 @@ class Question extends Model
     //Returns the next question details
     public function getFirstQuestion(){        
         $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id")
-                ->whereNull('pre_question_id')                
+                // ->whereNull('pre_question_id')    
+                ->where('is_first_question',1)         
                 ->first();        
         return $ques;
     }//eo getNextQuestion()
