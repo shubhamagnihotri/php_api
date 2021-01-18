@@ -955,6 +955,71 @@ class BusinessLogicService
         }
     }
 
+    // public function addQuestion($formData){
+       
+    //     $ques = new Question();
+    //     $ques->ques_title = $formData['ques_title'];
+    //     $ques->ques_option_type = $formData['ques_option_type'];
+    //     $ques->is_last_question = 1;
+    //     $ques->is_use_existing_car=$formData['is_use_existing_car'];
+    //     $ques->ques_status = 1;
+    //     $ques->from_age_condition=$formData['from_age_condition'];
+    //     $ques->to_age_condition	=$formData['to_age_condition'];
+    //     $ques->save();
+    //     $orderQuestion=Question::where('ques_parent_option_id','0')->orderBy('ques_ordering_id','desc')
+    //     ->first();
+    //     if($orderQuestion){
+    //         $order_id = $orderQuestion->ques_ordering_id +1;
+    //     }else{
+    //         $order_id = 1;
+    //     }
+    //     $inserted_data= Question::find( $ques->id);
+    //     $inserted_data->ques_ordering_id = $order_id;
+        
+    //     $inserted_data->save();
+    //     if($ques->id){
+    //         Question::where('id','!=',$ques->id)->update([
+    //             'is_last_question'=>0
+    //         ]);
+
+    //         $question_options = $formData['question_option'];
+    //         if(isset($formData['option_check_condition_id'])){
+    //             $option_check_condition_id = $formData['option_check_condition_id'];
+    //         }else{
+    //             $option_check_condition_id = [0];
+    //         }
+           
+    //         $condition_id=implode(",",$option_check_condition_id);
+    //         foreach($question_options as $question_option){
+    //             $new_ques_option = new QuestionOption();
+    //             //dd( $question_option);
+    //             if($formData['ques_option_type']== '8'){
+    //                 $new_ques_option->option_image = $question_option['value'];
+    //             }else{
+    //                 // $new_ques_option->option_title = settype($question_option['value'],'string');
+    //                 $new_ques_option->option_title = $question_option['value'];
+    //             }
+             
+    //             $new_ques_option->option_ques_id = $ques->id;
+    //             $new_ques_option->option_status = 1;
+    //             if(isset($formData['option_check_condition_id']) && count($formData['option_check_condition_id']) > 0){
+    //                 $new_ques_option->option_check_condition_id = $condition_id;
+    //             }else{
+    //                 $new_ques_option->option_check_condition_id =0;
+    //             }
+                
+    //             $new_ques_option->product_associated_type_id =$question_option['type_id'];
+    //             $new_ques_option->created_at =date("Y-m-d H:i:s");
+    //             // $new_ques_option->option_status = 1;
+    //             $new_ques_option->save();
+    //         }
+    //     }
+    //     if($ques){
+    //         return Helper::constructResponse(false,'Question added Successfully',200,[]);    
+    //     }
+
+    // }
+
     public function addQuestion($formData){
        
         $ques = new Question();
@@ -964,61 +1029,51 @@ class BusinessLogicService
         $ques->is_use_existing_car=$formData['is_use_existing_car'];
         $ques->ques_status = 1;
         $ques->from_age_condition=$formData['from_age_condition'];
-        $ques->to_age_condition	=$formData['to_age_condition'];
+        $ques->to_age_condition	= $formData['to_age_condition'];
+        $ques->condition_type = $formData['condition_type'];
+        $ques->gender_id = $formData['gender_id'];
+        $ques->ques_ordering_id = $this->newQuestionOrderId();
+        $ques->ques_level = 1;
         $ques->save();
-        $orderQuestion=Question::where('ques_parent_option_id','0')->orderBy('ques_ordering_id','desc')
-        ->first();
-        if($orderQuestion){
-            $order_id = $orderQuestion->ques_ordering_id +1;
-        }else{
-            $order_id = 1;
-        }
-        $inserted_data= Question::find( $ques->id);
-        $inserted_data->ques_ordering_id = $order_id;
-        
-        $inserted_data->save();
+
         if($ques->id){
             Question::where('id','!=',$ques->id)->update([
                 'is_last_question'=>0
             ]);
-
             $question_options = $formData['question_option'];
-            if(isset($formData['option_check_condition_id'])){
-                $option_check_condition_id = $formData['option_check_condition_id'];
-            }else{
-                $option_check_condition_id = [0];
-            }
-           
-            $condition_id=implode(",",$option_check_condition_id);
             foreach($question_options as $question_option){
                 $new_ques_option = new QuestionOption();
-                //dd( $question_option);
-                if($formData['ques_option_type']== '8'){
+         
+                if($formData['ques_option_type'] == '8'){
                     $new_ques_option->option_image = $question_option['value'];
                 }else{
-                    // $new_ques_option->option_title = settype($question_option['value'],'string');
                     $new_ques_option->option_title = $question_option['value'];
                 }
-             
                 $new_ques_option->option_ques_id = $ques->id;
                 $new_ques_option->option_status = 1;
-                if(isset($formData['option_check_condition_id']) && count($formData['option_check_condition_id']) > 0){
-                    $new_ques_option->option_check_condition_id = $condition_id;
-                }else{
-                    $new_ques_option->option_check_condition_id =0;
-                }
-                
                 $new_ques_option->product_associated_type_id =$question_option['type_id'];
                 $new_ques_option->created_at =date("Y-m-d H:i:s");
-                // $new_ques_option->option_status = 1;
                 $new_ques_option->save();
             }
         }
         if($ques){
             return Helper::constructResponse(false,'Question added Successfully',200,[]);    
+        }else{
+            return Helper::constructResponse(true,'Not added',200,[]);    
         }
-
     }
+
+    public function newQuestionOrderId(){
+        $ques=Question::where('ques_status',1)->orderBy('ques_ordering_id','desc')
+        ->first();
+        if($ques){
+            return 1;
+        }else{
+            return $ques->ques_level +1;
+        }
+    }
+
+ 
 
     public function getQuestionDetail($formData,$ques_id){
        $question=Question::where('id',$ques_id)->first();
