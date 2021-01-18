@@ -146,7 +146,7 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::get('get_static_pages_details/{id}','API\AdminController@getStaticPageDetails');
     Route::post('add_static_pages','API\AdminController@addStaticPages');
     Route::delete('delete_static_page/{id}','API\AdminController@deleteStaticPage');
-    Route::get('get_root_level_question','API\AdminController@getRootLevelQuestion');
+    Route::get('get_all_question','API\AdminController@getRootLevelQuestion');
     Route::post('update_question_linking','API\AdminController@updateQuestionLinking');
     Route::get('get_ques_linking_questions','API\AdminController@getQuesLinkingQuestions');
     Route::delete('delete_question/{id}','API\AdminController@deleteQuestion');
