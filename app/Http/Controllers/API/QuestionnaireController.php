@@ -479,7 +479,7 @@ class QuestionnaireController extends UtilityController
         $shedule_appointment = Consultant::join('appointments','consultations.id','appointments.consultation_id')
         ->where('appointments.appointment_status','!=','2')
         ->where('consultations.user_id','=',$request->user->id)
-        ->whereIn('consultations.consultant_status',[1,2])->get();
+        ->whereIn('consultations.consultant_status',[3])->get();
         return Helper::constructResponse(false,'',200,$shedule_appointment);
     }
     
@@ -687,7 +687,7 @@ class QuestionnaireController extends UtilityController
            })->first();
 
            if($user_app || $admin_app){
-               echo $time['start']."--".$time['end'];
+               //echo $time['start']."--".$time['end'];
                //echo $time['end'];
               $slots[$key]['is_booked'] = true;
            }else{
@@ -695,7 +695,7 @@ class QuestionnaireController extends UtilityController
            }
            
         }
-        return Helper::constructResponse(true,'Slots details',200,$slots);
+        return Helper::constructResponse(false,'Slots details',200,$slots);
     }
 
 
