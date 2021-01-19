@@ -400,7 +400,9 @@ class QuestionnaireController extends UtilityController
      //start get consultaion detail 
     public function getSheduledAppointments(Request $request){
         $shedule_appointment = Consultant::join('appointments','consultations.id','appointments.consultation_id')
-        ->where('appointments.appointment_status','!=','2')->whereIn('consultations.consultant_status',[1,2])->get();
+        ->where('appointments.appointment_status','!=','2')
+        ->where('consultations.user_id','=',$request->user->id)
+        ->whereIn('consultations.consultant_status',[1,2])->get();
         return Helper::constructResponse(false,'',200,$shedule_appointment);
     }
     
