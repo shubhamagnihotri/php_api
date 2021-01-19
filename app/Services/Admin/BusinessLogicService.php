@@ -415,7 +415,7 @@ class BusinessLogicService
         $product_images =  $formData['product_images'];
         if(count($product_images) > 0 ){
             foreach( $product_images as $p_images){
-                $path = Storage::disk('s3')->put('Dev',$p_images);
+                $path = Storage::disk('s3')->put(config("app.aws_bucket_environment"),$p_images);
                 $product_image=new ProductImages();
                 $product_image->product_image_url = config("app.aws_bucket_base_url").$path;
                 $product_image->product_id = $product->id;

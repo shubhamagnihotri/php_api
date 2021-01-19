@@ -23,9 +23,11 @@ use App\Models\ProductAssociatedConcernMapping;
 use App\Models\ProductAssociatedConditionMapping;
 use App\Models\ProductAssociatedTypes;
 use App\Models\ProductImages;
+use App\Models\StaticPages;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Validator;
 class QuestionnaireController extends UtilityController
 {
@@ -56,7 +58,45 @@ class QuestionnaireController extends UtilityController
             $question_id = $question_option['question_id'];
             $option_id =  $question_option['option_id'];
 
+            
+
+            
+
             $response = $this->getNextQuestion($question_id,$option_id,$consultation_id, $request->user);
+
+            $quesObj = new Question();
+            $optionObj = new QuestionOption(); 
+            $consultObj = new Consultant();
+            $questionDetails = $quesObj->getQuestionDetails($question_id);
+            $optionDetails = $optionObj->getOptionDetails($option_id);
+            if($optionDetails){
+                if($optionDetails->static_page_id ){
+                    $consultObj->markConsultationAsDisabled($consultation_id);
+                    
+                }
+            }
+            if($questionDetails){
+                $is_last = $questionDetails->is_last_question;
+                if($is_last){
+                    $consultObj->markConsultationAsQuestionCompleted($consultation_id);
+                }
+            }
+            
+            if(isset($response['data'])){
+                if(isset($response['data']['ques'])){
+                    if(isset($response['data']['ques'])){
+                        if($response['data']['ques']['ques_option_type'] == '9'){
+                            $consultObj->markConsultationAsDisabled($consultation_id);
+                        }
+                        if($optionDetails->static_page_id ){
+                            $response['data']['ques'] = array();
+                        }
+                    }
+                    if(isset($response['data']['option']) && $optionDetails->static_page_id ){
+                        $response['data']['option'] = array();
+                    }
+                }
+            }
            
             return response()->json($response);
         }
@@ -207,13 +247,14 @@ class QuestionnaireController extends UtilityController
         $optionObj = new QuestionOption();
         $parent_question_id = 0;
         $option_id = 0;
-        foreach($formdata['submit_data'] as $form){  
+        foreach($formdata['submit_data'] as $form){
                     
             $ques_detail = $quesObj->getQuestionDetails($form['ques_id']);              
             if(!$ques_detail->is_sub_question)
             {
                 $parent_question_id = $ques_detail->id;
             }    
+            $answer_id_str='';
             $answer_id_string  = 0;
             $answer_string =   $form['ques_answer'][0];            
             if($ques_detail->ques_option_type == '1' || $ques_detail->ques_option_type == '2')   
@@ -440,12 +481,16 @@ class QuestionnaireController extends UtilityController
     public function getConsultaionDetail(Request $request){
         $user_id = $request->user->id;
         $consultations=Consultant::where('user_id',$user_id)->orderBy('id','desc');
+        if($request->input('status')){                       
+            $consultations = $consultations->where('consultant_status',$request->input('status'));
+        }
         if($request->input('page_number')){
             $no_of_record = 3;
             $page_number = $request->input('page_number');
             $start_limit = ($page_number*$no_of_record);
             $consultations = $consultations->offset($start_limit)->limit($no_of_record);
         }
+        
         $consultations=$consultations->get();
        foreach($consultations as $consult){
            if(($consult['consultant_status']  == 4 || $consult['consultant_status']  == 2) && !empty($consult['car_report_response'])){ 
@@ -718,6 +763,51 @@ class QuestionnaireController extends UtilityController
             $i++;
         }
         return $time;
+    }
+
+    //Upload the image for the particular consultation
+    //Parameters
+    // consultation_id
+    // file_type - 	1->image,2->videos
+    // file_view_from - 0->none,1->left,2->right,3->front,4->back
+    // images[] array of images
+    public function uploadConsultationImage(Request $request){
+        $formData = $request->all();
+        $userData = $request->user;
+        $user_id = $userData->id;
+        $consultation_id = $formData['consultation_id'];
+        $file_type = $formData['file_type'];
+        $file_view_from = $formData['file_view_from'];
+        $images =  $formData['images'];
+        if(count($images) > 0 ){            
+            foreach( $images as $image){
+                $path = Storage::disk('s3')->put(config("app.aws_bucket_environment")."/consultation",$image);   
+                         
+                $fileObj  = new Files();
+                $fileObj->file_url = config("app.aws_bucket_base_url").$path;
+                $fileObj->consultation_id =$consultation_id;
+                $fileObj->file_type = $file_type;
+                $fileObj->file_view_from = $file_view_from;
+                $fileObj->user_id = $user_id;
+                $fileObj->save();
+            }
+        }
+        if($file_view_from == "4"){
+            $consultObj = new Consultant();
+            $consultObj->markConsultationAsImageSubmitted($consultation_id);
+        }
+        return Helper::constructResponse(false,'Image added Successfully',200,[]);
+    }
+
+    // This function returns the static page getQuestionDetails
+    // parameter id of the static page
+    public function getStaticPage($id){
+        $staticPageObj  = new StaticPages();
+        $staticPage = $staticPageObj->getStaticPage($id);
+        if(!$staticPage){
+            return Helper::constructResponse(true,'No content found',401,[]);
+        }
+        return Helper::constructResponse(false,'',200, $staticPage);
     }
 
 
