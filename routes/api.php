@@ -59,6 +59,8 @@ Route::group(['middleware' => ['verify.authUser']], function(){
   
     Route::match(['POST'],'check_and_get_sub_question','API\QuestionnaireController@checkAndGetSubQuestion');
 
+    Route::match(['POST'],'uploadConsultationImages','API\QuestionnaireController@uploadConsultationImage');
+
     // get all consultation 
     Route::match(['POST'],'get_consultaion_detail','API\QuestionnaireController@getConsultaionDetail');
 
@@ -76,6 +78,8 @@ Route::group(['middleware' => ['verify.authUser']], function(){
     Route::match(['POST'],'get_consultation_slots','API\QuestionnaireController@getConsultationSlots');
 
     Route::post('price_plans/{id}','API\PaymentController@pricePlans');
+
+    Route::match(['GET'],'getStaticPage/{id}','API\QuestionnaireController@getStaticPage');
 
 
 });

@@ -25,7 +25,7 @@ class Question extends Model
 
     //Returns the next question details
     public function getFirstQuestion(){        
-        $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id")
+        $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id","is_last_question")
                 // ->whereNull('pre_question_id')    
                 ->where('is_first_question',1)         
                 ->first();        
@@ -39,7 +39,7 @@ class Question extends Model
     }
 
     public function getQuestionDetails($question_id){        
-        $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id")
+        $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id","is_last_question")
                 ->where('id',$question_id)
                 ->first();                    
         return $ques;
@@ -48,7 +48,7 @@ class Question extends Model
 
     // This function return if question has the subquestion with the following option
     public function isChildQuestionOfOption($option_id){
-        $is_sub_ques =  Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id")
+        $is_sub_ques =  Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id","is_last_question")
                 ->where('ques_parent_option_id',$option_id)
                 ->where('ques_status',1)                
                 ->first();

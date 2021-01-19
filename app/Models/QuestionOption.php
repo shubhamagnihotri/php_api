@@ -28,4 +28,10 @@ class QuestionOption extends Model
             ->where('option_status',1)
             ->get();
     }
+
+    public function getOptionDetails($id){
+        return QuestionOption::select("id","option_title","option_ques_id","static_page_id","option_image")
+            ->where('id',$id)            
+            ->first();
+    }
 }
