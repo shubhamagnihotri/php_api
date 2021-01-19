@@ -33,14 +33,30 @@ class QuestionnaireController extends UtilityController
 
     public function getQuestionAndSubmitAnswer(Request $request){
         if ($request->isMethod('get')) {
-            $response=$this->getFirstQuestion($request);
+            // $response=$this->getFirstQuestion($request);
+            $response = $this->getNextQuestion(0,0,0,$request->user);
             return response()->json($response);
         }
         if ($request->isMethod('post')) {
             // getting next question 
-            if($request->input('ques_step') == 'next'){
-                $response= $this->submitQuestionAnswerGetQues($request->all(),$request->user);
+            // if($request->input('ques_step') == 'next'){
+            //     $response= $this->submitQuestionAnswerGetQues($request->all(),$request->user);
+            // }
+            $formdata = $request->all();
+            $consultation_id = $formdata['consultation_id'];
+
+            
+            if(empty($formdata['consultation_id'])){
+                
+                $consultation_id = $this->generateConsultationId($request->user->id);                       
             }
+            $question_option = $this->submitQuestionForm($request->all(),$request->user,$consultation_id);
+           
+
+            $question_id = $question_option['question_id'];
+            $option_id =  $question_option['option_id'];
+
+            $response = $this->getNextQuestion($question_id,$option_id,$consultation_id, $request->user);
            
             return response()->json($response);
         }
@@ -49,34 +65,37 @@ class QuestionnaireController extends UtilityController
 
     // This is a recursive function for getting the next question if condition is not appllied
     public function checkNextQuestionWithCondition($questions,$age,$gender_id)
-    {        
+    {                
         $quesObj = new Question();
-        $optionObj = new QuestionOption();        
-        if($questions->condition_type){
-            $condition_array = explode(",",$questions->condition_type);             
-            if(in_array(1,$condition_array))  //1: Gender; 2: Age  
-            {                
-                $gender_array = explode(",",$questions->gender_id);                 
-                if(!in_array($gender_id,$gender_array))
-                {                   
-                    $questionid = $questions->id;
-                    $question = $quesObj->getNextQuestionionId($questionid);
-                    $next_ques_id = $question->next_question_id;               
-                    $questions = $quesObj->getQuestionDetails($next_ques_id); 
-                    $questions =  $this->checkNextQuestionWithCondition($questions,$age,$gender_id);
-                }
-            }                       
-        }
+        $optionObj = new QuestionOption(); 
+        if($questions){
+            if($questions->condition_type){
+                $condition_array = explode(",",$questions->condition_type);             
+                if(in_array(1,$condition_array))  //1: Gender; 2: Age  
+                {                
+                    $gender_array = explode(",",$questions->gender_id);                 
+                    if(!in_array($gender_id,$gender_array))
+                    {                   
+                        $questionid = $questions->id;
+                        $question = $quesObj->getNextQuestionionId($questionid);
+                        $next_ques_id = $question->next_question_id;               
+                        $questions = $quesObj->getQuestionDetails($next_ques_id); 
+                        $questions =  $this->checkNextQuestionWithCondition($questions,$age,$gender_id);
+                    }
+                }                       
+            }
+        }       
+        
         return $questions;
     }//eo checkNextQuestionWithCondition()
 
 
     // This function returns the next question of provided id
     // 0 for first question
-    public function getNextQuestion($questionid = 0,$option_id = 0,Request $request)
+    public function getNextQuestion($questionid = 0,$option_id = 0,$consultation_id = 0,$userData)
     {       
-        $gender_code = $request->user->gender;
-        $dob = $request->user->date_of_birth;       
+        $gender_code = $userData->gender;
+        $dob = $userData->date_of_birth;       
         $age = $this->getAgeFromDOB($dob);
         $gender_id =1;// $this->getGenderIdByShortCode($gender_code);        
         
@@ -85,8 +104,8 @@ class QuestionnaireController extends UtilityController
         $questions = array();
 
         if($questionid == 0)
-        {
-            $questions = $quesObj->getFirstQuestion($questionid);
+        {           
+            $questions = $quesObj->getFirstQuestion();
         }
         else{
             
@@ -99,40 +118,25 @@ class QuestionnaireController extends UtilityController
                 $question = $quesObj->getNextQuestionionId($questionid);
                 $next_ques_id = $question->next_question_id;               
                 $questions = $quesObj->getQuestionDetails($next_ques_id);   
-            }
-                              
-        }  
-        
+            }                              
+        }                  
         $questions = $this->checkNextQuestionWithCondition($questions,$age,$gender_id);
+        $option=array();
+        if($questions){
+            $option=$this->getOptionsOfQuestionId($questions->id);
+        }
         
-        
-        $option= $optionObj->getOptionOfQuestion($questions->id);
-        if(count($option) > 0){
-            foreach($option as $opt){
-               
-                $is_sub_ques =$questions->isChildQuestionOfOption($opt['id']);
-                if($is_sub_ques){
-                    $opt['is_sub_ques_exist'] = true;
-                }else{
-                    $opt['is_sub_ques_exist'] = false;
-                }
-            }
-       }
-        return Helper::constructResponse(false,'',200,['ques'=>$questions,'option'=> $option,'consultation_id'=>'']);
+                
+        return Helper::constructResponse(false,'',200,['ques'=>$questions,'option'=> $option,'consultation_id'=>$consultation_id]);
     }
 
-    // get first question and option start
-    public function getFirstQuestion($formdata){
-
+    //returns the option list of given question id;
+    public function getOptionsOfQuestionId($question_id){
         $quesObj = new Question();
         $optionObj = new QuestionOption();
-        $ques = $quesObj->getFirstQuestion();        
-        if(!$ques){
-            return Helper::constructResponse(true,'No Question are available',401,[]);
-        }
-       $option= $optionObj->getOptionOfQuestion($ques->id);    
-       if(count($option) > 0){
-            foreach($option as $opt){
+        $option= $optionObj->getOptionOfQuestion($question_id);
+        if(count($option) > 0){
+            foreach($option as $opt){               
                 $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);
                 if($is_sub_ques){
                     $opt['is_sub_ques_exist'] = true;
@@ -141,8 +145,32 @@ class QuestionnaireController extends UtilityController
                 }
             }
        }
-       return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
+       return  $option;
     }
+    
+
+    // get first question and option start
+    // public function getFirstQuestion($formdata){
+
+    //     $quesObj = new Question();
+    //     $optionObj = new QuestionOption();
+    //     $ques = $quesObj->getFirstQuestion();        
+    //     if(!$ques){
+    //         return Helper::constructResponse(true,'No Question are available',401,[]);
+    //     }
+    //    $option= $optionObj->getOptionOfQuestion($ques->id);    
+    //    if(count($option) > 0){
+    //         foreach($option as $opt){
+    //             $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);
+    //             if($is_sub_ques){
+    //                 $opt['is_sub_ques_exist'] = true;
+    //             }else{
+    //                 $opt['is_sub_ques_exist'] = false;
+    //             }
+    //         }
+    //    }
+    //    return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
+    // }
     // get first question and option end
 
 
@@ -152,171 +180,220 @@ class QuestionnaireController extends UtilityController
 
         $quesObj = new Question();
         $optionObj = new QuestionOption();
-
-        $ques = $quesObj->getQuestionDetails($id);
-       // $ques = Question::where('id',1)->where('ques_status',1)->first();
+        $ques = $quesObj->getQuestionDetails($id);       
         if(!$ques){
             return Helper::constructResponse(true,'No Question are available',401,[]);
         }
-       $option= $optionObj->getOptionOfQuestion($ques->id);   
-       if(count($option) > 0){
-            foreach($option as $opt){
-                $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);
-                if($is_sub_ques){
-                    $opt['is_sub_ques_exist'] = true;
-                }else{
-                    $opt['is_sub_ques_exist'] = false;
-                }
-            }
-       }
+        $option=$this->getOptionsOfQuestionId($ques->id);
        return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=>'']);
     }
     // eo getQuestionDetails
 
-    
+    // Returns the new generated consulted id
+    public function generateConsultationId($user_id){
+        $consultation_data = new Consultant();
+        $consultation_data->user_id = $user_id;
+        $consultation_data->consultant_created_at = date("Y-m-d H:i:s");
+        $consultation_data->consultant_status = 0;
+        $consultation_data->created_at = date("Y-m-d H:i:s");
+        $consultation_data->save();
+        return $consultation_data->id;
+    }//eo generateConsultationId()
 
-    // submit question answer and get next question (Next question )start
-    public function submitQuestionAnswerGetQues($formdata,$userData){
-        $all_ques_array = array_column($formdata['submit_data'],'ques_id');
-        echo "<pre>";
-        print_r($all_ques_array);
-        die();
-        if(empty($formdata['consultation_id'])){
-        // 
-            $all_ques_array = array_column($formdata['submit_data'],'ques_id');
-           
-        //    if(!in_array(1,$all_ques_array)){
-        //     return Helper::constructResponse(true,'please provide all params',400,[]);
-        //    }
-           $consultation_data = new Consultant();
-           $consultation_data->user_id = $userData->id;
-           $consultation_data->consultant_created_at = date("Y-m-d H:i:s");
-           $consultation_data->consultant_status = 0;
-           $consultation_data->created_at = date("Y-m-d H:i:s");
-           $consultation_data->save();
-          $formdata['consultation_id'] = $consultation_data->id;
-        }
-        $all_ques_array = array_column($formdata['submit_data'],'ques_id');
-        $max_ques_id = max($all_ques_array);
-        $max_ques_options = null;
-        foreach($formdata['submit_data'] as $form){
-            $ques_detail = Question::where('id',$form['ques_id'])->first();
-        
-            $consultOption =QuesAnswerConsultant::where('ques_id',$form['ques_id'])->where('consultant_id',$formdata['consultation_id'])->get();
-            QuesAnswerConsultant::where('ques_id',$form['ques_id'])->where('consultant_id',$formdata['consultation_id'])->delete();
-            if($form['ques_id'] == $max_ques_id){
-                $max_ques_options = count($form['ques_answer']) == 1? $form['ques_answer'][0]:$form['ques_answer'][0];
-            }
-            foreach($form['ques_answer'] as $answer){
-                $get_option_detail= QuestionOption::where('id',$answer)->first();
-                $QuesAnswerConsult = new QuesAnswerConsultant();
-                $QuesAnswerConsult->ques_id = $form['ques_id'];
-                $QuesAnswerConsult->option_id = $answer; 
-                if($ques_detail->ques_title){
-                    $QuesAnswerConsult->question_for_admin= $ques_detail->ques_title;
-                }
-                if($get_option_detail->option_title){
-                    $QuesAnswerConsult->answer_for_admin= $get_option_detail->option_title;
-                }
-                $QuesAnswerConsult->consultant_id = $formdata['consultation_id']; 
-                $QuesAnswerConsult->save();
-            }
-        }
-
-        if($formdata['is_last_question'] == 'true'){
-            $consult_status=Consultant::where('id',$formdata['consultation_id'])->where('user_id',$userData->id)->update([
-                'consultant_status'=>4,
-                'consultant_ended_at'=>date("Y-m-d H:i:s")
-            ]);
-            $res = ['ques'=>[],'option'=> [],'is_final_ques_submitted'=>false,'link'=>'','consultation_id'=> $formdata['consultation_id']];
-            if($consult_status){
-                $res['is_final_ques_submitted'] = true;
-            }
-            return Helper::constructResponse(false,'Option not available',401,$res);
-        }
-        if($max_ques_options != null){
-            $option = QuestionOption::where('id',$max_ques_options)->where('option_status',1)->first();
-            if($option && $option->option_link){
-                return Helper::constructResponse(false,'',200,['ques'=>[],'option'=> [],'link'=>$option->option_link,'consultation_id'=> $formdata['consultation_id']]);
-            }
-            if(!$option){
-                return Helper::constructResponse(true,'Option not available',401,[]);
-            }
-            if($option->option_check_condition_id != '0'){
-                $checkingConditionsId = explode(",",$option->option_check_condition_id);
-                $checkingConditions= QuesCondition::whereIn('id', $checkingConditionsId)->get();
-                $includedGender =[];
-                 
-                foreach($checkingConditions as $conditions){
-                    if($conditions['condition_title'] != 'Age'){
-                        $includedGender[] = $conditions['condition_code'];
-                    }else{
-                        $checkAge = $conditions['condition_code'];
-                    }
-                }
-                if(count($includedGender) > 0 && isset($checkAge)){
-                    // dd('dd 1');
-                    $age = date_diff(date_create($request->user->date_of_birth), date_create('today'))->y;
-                    if(in_array($request->user->gender,$includedGender) && $age > $checkAge){
-                        $next_ques_id = $option->option_condition_true_next_question_id;
-                    }else{
-                        $next_ques_id = $option->option_condition_false_next_question_id;
-                    }
-               
-                }else if(count($includedGender) > 0 && !isset($checkAge)){
-                   
-                    if(in_array($request->user->gender,$includedGender)) {
-                        $next_ques_id = $option->option_condition_true_next_question_id;
-                    }else{
-                        $next_ques_id = $option->option_condition_false_next_question_id;
-                    }
-                  
-                }else if(count($includedGender) == 0 && isset($checkAge)){
-                    // dd('dd 3');
-                    $age = date_diff(date_create($request->user->date_of_birth), date_create('today'))->y;
-                    if($age > $checkAge){
-                        $next_ques_id = $option->option_condition_true_next_question_id;
-                    }else{
-                        $next_ques_id = $option->option_condition_false_next_question_id;
-                    }
-                }
-                $ques = Question::where('id',$next_ques_id )->where('ques_status',1)->first();
-                if(!$ques){
-                    return Helper::constructResponse(true,'No Question are available',401,[]);
-                }
-                $option= QuestionOption::where('option_ques_id',$ques->id)->where('option_status',1)->get();
-                return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'link'=>'']);
-
-            }// option_check_condition_id == 0
-
-            // when no conditions
-            if($option->option_check_condition_id == 0){
-                $ques = Question::where('ques_parent_option_id',$max_ques_options)->where('ques_status',1)->first();
-               if(!$ques){
-                $max_ques_id = $max_ques_id+1;
-                $ques = Question::where('id',$max_ques_id)->where('ques_status',1)->first();
-               }
-                if($ques){
-                    $option= QuestionOption::where('option_ques_id',$ques->id)->where('option_status',1)->get();
-                    if(count($option) > 0){
-                        foreach($option as $opt){
-                           
-                            $is_sub_ques = Question::where('ques_parent_option_id',$opt['id'])->where('ques_status',1)->where('is_sub_question',1)->first();
-                          
-                            if($is_sub_ques){
-                                $opt['is_sub_ques_exist'] = true;
-                            }else{
-                                $opt['is_sub_ques_exist'] = false;
+    //this function save the answers and 
+    public function submitQuestionForm($formdata,$userData,$consultation_id)
+    {
+        $quesObj = new Question();
+        $optionObj = new QuestionOption();
+        $parent_question_id = 0;
+        $option_id = 0;
+        foreach($formdata['submit_data'] as $form){  
+                    
+            $ques_detail = $quesObj->getQuestionDetails($form['ques_id']);              
+            if(!$ques_detail->is_sub_question)
+            {
+                $parent_question_id = $ques_detail->id;
+            }    
+            $answer_id_string  = 0;
+            $answer_string =   $form['ques_answer'][0];            
+            if($ques_detail->ques_option_type == '1' || $ques_detail->ques_option_type == '2')   
+            {
+                $answerid_array = array();
+                $answer_string_array = array();
+                foreach($form['ques_answer'] as $answer){
+                    if($ques_detail->ques_option_type == '1'){
+                        $option_id = $answer;
+                        $opt_ques = $quesObj->isChildQuestionOfOption($answer);
+                        if($opt_ques){                            
+                            if($opt_ques->is_sub_question){
+                                $option_id = 0;
                             }
                         }
+                        
                     }
-                    return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=> $formdata['consultation_id']]);
+                    $answerid_array[] = $answer;
+                    $get_option_detail= QuestionOption::where('id',$answer)->first();                    
+                    if($get_option_detail->option_title){
+                        $answer_string_array[] = $get_option_detail->option_title;                        
+                    }                    
                 }
-            }
+                $answer_id_str = implode(",",$answerid_array) ;
+                $answer_string = implode(",",$answer_string_array) ;
+            } 
+            $QuesAnswerConsult = new QuesAnswerConsultant();
+            $QuesAnswerConsult->ques_id = $ques_detail->id;
+            $QuesAnswerConsult->option_id = $answer_id_str; 
+            $QuesAnswerConsult->question_for_admin= $ques_detail->ques_title;
+            $QuesAnswerConsult->answer_for_admin= $answer_string;
+            $QuesAnswerConsult->consultant_id = $consultation_id; 
+            $QuesAnswerConsult->save();
+        };
+        $return_data = array('question_id'=>$parent_question_id,"option_id"=>$option_id);        
+        return $return_data;
+    }//eo submitQuestionForm();
 
-        }// max ques option != null
+    // submit question answer and get next question (Next question )start
+    // public function submitQuestionAnswerGetQues($formdata,$userData){
+    //     $all_ques_array = array_column($formdata['submit_data'],'ques_id');
+    //     echo "<pre>";
+    //     print_r($all_ques_array);
+    //     die();
+    //     if(empty($formdata['consultation_id'])){
+    //     // 
+    //         $all_ques_array = array_column($formdata['submit_data'],'ques_id');
+           
+    //     //    if(!in_array(1,$all_ques_array)){
+    //     //     return Helper::constructResponse(true,'please provide all params',400,[]);
+    //     //    }
+    //        $consultation_data = new Consultant();
+    //        $consultation_data->user_id = $userData->id;
+    //        $consultation_data->consultant_created_at = date("Y-m-d H:i:s");
+    //        $consultation_data->consultant_status = 0;
+    //        $consultation_data->created_at = date("Y-m-d H:i:s");
+    //        $consultation_data->save();
+    //       $formdata['consultation_id'] = $consultation_data->id;
+    //     }
+    //     $all_ques_array = array_column($formdata['submit_data'],'ques_id');
+    //     $max_ques_id = max($all_ques_array);
+    //     $max_ques_options = null;
+    //     foreach($formdata['submit_data'] as $form){
+    //         $ques_detail = Question::where('id',$form['ques_id'])->first();
+        
+    //         $consultOption =QuesAnswerConsultant::where('ques_id',$form['ques_id'])->where('consultant_id',$formdata['consultation_id'])->get();
+    //         QuesAnswerConsultant::where('ques_id',$form['ques_id'])->where('consultant_id',$formdata['consultation_id'])->delete();
+    //         if($form['ques_id'] == $max_ques_id){
+    //             $max_ques_options = count($form['ques_answer']) == 1? $form['ques_answer'][0]:$form['ques_answer'][0];
+    //         }
+    //         foreach($form['ques_answer'] as $answer){
+    //             $get_option_detail= QuestionOption::where('id',$answer)->first();
+    //             $QuesAnswerConsult = new QuesAnswerConsultant();
+    //             $QuesAnswerConsult->ques_id = $form['ques_id'];
+    //             $QuesAnswerConsult->option_id = $answer; 
+    //             if($ques_detail->ques_title){
+    //                 $QuesAnswerConsult->question_for_admin= $ques_detail->ques_title;
+    //             }
+    //             if($get_option_detail->option_title){
+    //                 $QuesAnswerConsult->answer_for_admin= $get_option_detail->option_title;
+    //             }
+    //             $QuesAnswerConsult->consultant_id = $formdata['consultation_id']; 
+    //             $QuesAnswerConsult->save();
+    //         }
+    //     }
+
+    //     if($formdata['is_last_question'] == 'true'){
+    //         $consult_status=Consultant::where('id',$formdata['consultation_id'])->where('user_id',$userData->id)->update([
+    //             'consultant_status'=>4,
+    //             'consultant_ended_at'=>date("Y-m-d H:i:s")
+    //         ]);
+    //         $res = ['ques'=>[],'option'=> [],'is_final_ques_submitted'=>false,'link'=>'','consultation_id'=> $formdata['consultation_id']];
+    //         if($consult_status){
+    //             $res['is_final_ques_submitted'] = true;
+    //         }
+    //         return Helper::constructResponse(false,'Option not available',401,$res);
+    //     }
+    //     if($max_ques_options != null){
+    //         $option = QuestionOption::where('id',$max_ques_options)->where('option_status',1)->first();
+    //         if($option && $option->option_link){
+    //             return Helper::constructResponse(false,'',200,['ques'=>[],'option'=> [],'link'=>$option->option_link,'consultation_id'=> $formdata['consultation_id']]);
+    //         }
+    //         if(!$option){
+    //             return Helper::constructResponse(true,'Option not available',401,[]);
+    //         }
+    //         if($option->option_check_condition_id != '0'){
+    //             $checkingConditionsId = explode(",",$option->option_check_condition_id);
+    //             $checkingConditions= QuesCondition::whereIn('id', $checkingConditionsId)->get();
+    //             $includedGender =[];
+                 
+    //             foreach($checkingConditions as $conditions){
+    //                 if($conditions['condition_title'] != 'Age'){
+    //                     $includedGender[] = $conditions['condition_code'];
+    //                 }else{
+    //                     $checkAge = $conditions['condition_code'];
+    //                 }
+    //             }
+    //             if(count($includedGender) > 0 && isset($checkAge)){
+    //                 // dd('dd 1');
+    //                 $age = date_diff(date_create($request->user->date_of_birth), date_create('today'))->y;
+    //                 if(in_array($request->user->gender,$includedGender) && $age > $checkAge){
+    //                     $next_ques_id = $option->option_condition_true_next_question_id;
+    //                 }else{
+    //                     $next_ques_id = $option->option_condition_false_next_question_id;
+    //                 }
+               
+    //             }else if(count($includedGender) > 0 && !isset($checkAge)){
+                   
+    //                 if(in_array($request->user->gender,$includedGender)) {
+    //                     $next_ques_id = $option->option_condition_true_next_question_id;
+    //                 }else{
+    //                     $next_ques_id = $option->option_condition_false_next_question_id;
+    //                 }
+                  
+    //             }else if(count($includedGender) == 0 && isset($checkAge)){
+    //                 // dd('dd 3');
+    //                 $age = date_diff(date_create($request->user->date_of_birth), date_create('today'))->y;
+    //                 if($age > $checkAge){
+    //                     $next_ques_id = $option->option_condition_true_next_question_id;
+    //                 }else{
+    //                     $next_ques_id = $option->option_condition_false_next_question_id;
+    //                 }
+    //             }
+    //             $ques = Question::where('id',$next_ques_id )->where('ques_status',1)->first();
+    //             if(!$ques){
+    //                 return Helper::constructResponse(true,'No Question are available',401,[]);
+    //             }
+    //             $option= QuestionOption::where('option_ques_id',$ques->id)->where('option_status',1)->get();
+    //             return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'link'=>'']);
+
+    //         }// option_check_condition_id == 0
+
+    //         // when no conditions
+    //         if($option->option_check_condition_id == 0){
+    //             $ques = Question::where('ques_parent_option_id',$max_ques_options)->where('ques_status',1)->first();
+    //            if(!$ques){
+    //             $max_ques_id = $max_ques_id+1;
+    //             $ques = Question::where('id',$max_ques_id)->where('ques_status',1)->first();
+    //            }
+    //             if($ques){
+    //                 $option= QuestionOption::where('option_ques_id',$ques->id)->where('option_status',1)->get();
+    //                 if(count($option) > 0){
+    //                     foreach($option as $opt){
+                           
+    //                         $is_sub_ques = Question::where('ques_parent_option_id',$opt['id'])->where('ques_status',1)->where('is_sub_question',1)->first();
+                          
+    //                         if($is_sub_ques){
+    //                             $opt['is_sub_ques_exist'] = true;
+    //                         }else{
+    //                             $opt['is_sub_ques_exist'] = false;
+    //                         }
+    //                     }
+    //                 }
+    //                 return Helper::constructResponse(false,'',200,['ques'=>$ques,'option'=> $option,'consultation_id'=> $formdata['consultation_id']]);
+    //             }
+    //         }
+
+    //     }// max ques option != null
       
-    }
+    // }
     // submit question answer and get next question (Next question )end
 
 
