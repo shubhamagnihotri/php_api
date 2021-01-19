@@ -137,13 +137,13 @@ class QuestionnaireController extends UtilityController
         $option= $optionObj->getOptionOfQuestion($question_id);
         if(count($option) > 0){
             foreach($option as $opt){               
-                $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);
-                if($is_sub_ques){
-                    $opt['is_sub_ques_exist'] = true;
+                $is_sub_ques =$quesObj->isChildQuestionOfOption($opt['id']);                               
+                if($is_sub_ques){                   
+                    $opt['is_sub_ques_exist'] = $is_sub_ques->is_sub_question;;
                 }else{
-                    $opt['is_sub_ques_exist'] = false;
+                    $opt['is_sub_ques_exist'] = 0;
                 }
-            }
+            }           
        }
        return  $option;
     }
