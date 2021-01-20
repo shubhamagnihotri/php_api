@@ -121,6 +121,8 @@ return [
     'imap_hostname'=> env('MAIL_USERNAME'),
     'imap_hostfromname'=> env('MAIL_FROM_NAME'),
     'aws_bucket_base_url'=> env('AWS_BUCKET_BASE_URL'),
+    'stripe_key'=> env('STRIPE_KEY'),
+    'stripe_secret'=> env('STRIPE_SECRET'),
     'aws_bucket_environment'=> "Dev",
     'key' => env('APP_KEY'),
     'appointment_start_time' => '10:00AM',
