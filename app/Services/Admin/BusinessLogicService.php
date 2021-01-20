@@ -1193,51 +1193,50 @@ class BusinessLogicService
     public function getStaticPagesDetails($formData){
         $static_pages=StaticPages::get();
         if($static_pages){
-         return Helper::constructResponse(true,'',200,$static_pages);
+         return Helper::constructResponse(false,'',200,$static_pages);
         }
     }
 
     public function getStaticPageDetails($formData,$id){
         $static_page=StaticPages::where('id',$id)->first();
+        //dd($static_page);
         if($static_page){
-            $static_page_linking = StaticPageLinking::where('static_page_id',$id)->get();
-            foreach($static_page_linking as $spl){
-                if($spl['option_id']){
-                    $ques_option = QuestionOption::where('id',$spl['option_id'])
-                    ->where('option_status',1)->first();
-                    if($ques_option['option_ques_id']){
-                        $ques = Question::where('id',$ques_option['option_ques_id'])
-                        ->where('ques_status',1)->first();
-                        $option = QuestionOption::where('option_ques_id',$ques_option['option_ques_id'])->get();
-                        $spl['question']= $ques;
-                       
+           $static= StaticPageLinking::select('page_title','page_content','question_id','option_id')
+            ->join('static_pages as sp','sp.id','static_page_linking.static_page_id')->where('static_page_linking.static_page_id',$id)->get();
+            ;
+            $response=[];
+            if(count($static) > 0){
+                $i=0;
+                foreach($static as $st){
+                  
+                    $question_id = $st['question_id'];
+                    $options = explode(",",$st['option_id']);
+                    $ques = Question::where('id',$question_id)->first();
+                  
+                    $response= $ques;
+                    if($ques){
+                        $option = QuestionOption::where('option_ques_id',$ques->id)->get();
                         foreach($option as $op){
-                            if($op['id'] == $spl['option_id']){
-                                $op['is_selected'] = true;
+                            if(in_array($op['id'],$options)){
+                                $op['selected'] = true;
                             }else{
-                                $op['is_selected'] = false;
+                                $op['selected'] = false;
                             }
                         }
-                        $spl['question_option']= $option;
-                        
+                        $response['option'] = $option;
+                    }else{
+                        $response['option'] = null;
                     }
-                   
-
+                   $i++;
                 }
-                if($spl['question_id']){
-                    $ques = Question::where('id',$spl['question_id'])
-                    ->where('ques_status',1)->first();
-                    $option = QuestionOption::where('option_ques_id',$ques_option['option_ques_id'])->get();
-                    $spl['question']= $ques;
-                    $spl['question']= $ques;
-                    $spl['question_option']= [];
-                }
+                $st['ques'] =  $response;
             }
-         return Helper::constructResponse(true,'',200,$static_page_linking);
+            return Helper::constructResponse(false,'',200,$static);
         }else{
-            return Helper::constructResponse(true,'',200,[]);
+            return Helper::constructResponse(false,'',200,[]);
         }
     }
+
 
     public function addStaticPages($formData){
         $static_pages = new StaticPages();
@@ -1247,21 +1246,19 @@ class BusinessLogicService
         $static_pages->updated_at =  date("Y-m-d H:i:s");
         $static_pages->save();
         foreach($formData['question'] as $question){
-            if($question['ques_id']){
+            if(!empty($question['ques_id']) && !empty($question['option_id'])){
                 $static_page_link = new StaticPageLinking();
                 $static_page_link->static_page_id = $static_pages['id'];
                 $static_page_link->question_id = $question['ques_id'];
+                $static_page_link->option_id = implode(",",$question['option_id']);
                 $static_page_link->save();
-            }
-            if($question['option_id']){
-                $static_page_link = new StaticPageLinking();
-                $static_page_link->static_page_id = $static_pages['id'];
-              
-                $static_page_link->option_id = $question['option_id'];
-                $static_page_link->save();
+                foreach($question['option_id'] as $option){
+                    $optionStaticId=QuestionOption::where('id',$option)->update(['static_page_id'=>$static_pages['id']]);
+                }
+                
             }
         }
-        return Helper::constructResponse(true,'Static pages added successfully',200,[]);
+        return Helper::constructResponse(false,'Static pages added successfully',200,[]);
     }
 
     public function deleteStaticPage($id){
