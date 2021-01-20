@@ -26,6 +26,7 @@ use App\Models\ProductImages;
 use App\Models\StaticPages;
 use Carbon\Carbon;
 use DateTime;
+use Stripe;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Validator;
@@ -88,12 +89,19 @@ class QuestionnaireController extends UtilityController
                         if($response['data']['ques']['ques_option_type'] == '9'){
                             $consultObj->markConsultationAsDisabled($consultation_id);
                         }
-                        if($optionDetails->static_page_id ){
-                            $response['data']['ques'] = array();
+                        if($optionDetails){
+                            if($optionDetails->static_page_id ){
+                                $response['data']['ques'] = array();
+                            }
                         }
                     }
-                    if(isset($response['data']['option']) && $optionDetails->static_page_id ){
-                        $response['data']['option'] = array();
+                    if(isset($response['data']['option']))
+                    {
+                        if($optionDetails){
+                            if($optionDetails->static_page_id ){
+                                $response['data']['option'] = array();
+                            }
+                        }
                     }
                 }
             }
@@ -810,6 +818,12 @@ class QuestionnaireController extends UtilityController
         return Helper::constructResponse(false,'',200, $staticPage);
     }
 
+    public function stripe(){
+        
+        return view('strip');
+    }
+
+    
 
     public function get_next_question($consultId){
         return 4;

@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 // });
 
 
-
+Route::get('stripe', 'API\PaymentController@stripe');
 
 Route::group(['prefix' =>'v1'], function () {
 
@@ -80,6 +80,8 @@ Route::group(['middleware' => ['verify.authUser']], function(){
     Route::post('price_plans/{id}','API\PaymentController@pricePlans');
 
     Route::match(['GET'],'getStaticPage/{id}','API\QuestionnaireController@getStaticPage');
+
+    Route::post('stripe', 'API\PaymentController@stripePost')->name('stripe.post');
 
 
 });

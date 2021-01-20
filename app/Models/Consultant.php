@@ -23,6 +23,11 @@ class Consultant extends Model
     protected $table = 'consultations';
 
 
+    public function markConsultationAsPaymentDone($consultation_id){
+        Consultant::where('id', $consultation_id)
+        ->update(['consultant_status' => 1]); //final submitted and payment done
+    }
+
     public function markConsultationAsImageSubmitted($consultation_id){
         Consultant::where('id', $consultation_id)
         ->update(['consultant_status' => 4]); //ques and images submit payment not done
