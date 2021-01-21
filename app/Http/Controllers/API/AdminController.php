@@ -286,6 +286,16 @@ class AdminController extends Controller
         return response()->json($response);
     }
 
+    public function getQuestionForStaticPage(){
+        $response = $this->businessLogicServiceObject->getQuestionForStaticPage();
+        return response()->json($response);
+    }
+
+    public function getOptionOfQuestion($question_id){
+        $response = $this->businessLogicServiceObject->getOptionOfQuestion($question_id);
+        return response()->json($response);
+    }
+
 
 
 

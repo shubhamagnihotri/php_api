@@ -79,7 +79,7 @@ class ValidationService
             'state' => ['required'],
             'country' => ['required'],
             'zip_code' => ['required'],
-            'date_of_birth' => ['required','date_format:d-m-Y'],
+            'date_of_birth' => ['required','date_format:Y-m-d'],
         ];
         $validation['messages'] = [
             'fname.required' => 'First Name is required',

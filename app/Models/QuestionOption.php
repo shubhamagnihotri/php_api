@@ -34,4 +34,6 @@ class QuestionOption extends Model
             ->where('id',$id)            
             ->first();
     }
+    
+
 }

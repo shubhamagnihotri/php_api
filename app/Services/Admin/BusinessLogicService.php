@@ -1413,6 +1413,19 @@ class BusinessLogicService
         return Helper::constructResponse(false,'Uploaded',200,['path'=>$path]);
     }
 
+    public function getQuestionForStaticPage(){
+
+        $quesObj = new Question();        
+        $questions = $quesObj->getQuestionForStaticPage();
+        return Helper::constructResponse(false,'Questions',200,$questions);    
+    }
+
+    public function getOptionOfQuestion($question_id){        
+        $optionObj = new QuestionOption(); 
+        $options = $optionObj->getOptionOfQuestion($question_id);
+        return Helper::constructResponse(false,'Option',200,$options);  
+    }
+
 
 
 }

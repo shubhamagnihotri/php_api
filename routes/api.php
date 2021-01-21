@@ -60,6 +60,7 @@ Route::group(['middleware' => ['verify.authUser']], function(){
     Route::match(['POST'],'check_and_get_sub_question','API\QuestionnaireController@checkAndGetSubQuestion');
 
     Route::match(['POST'],'uploadConsultationImages','API\QuestionnaireController@uploadConsultationImage');
+    Route::match(['GET'],'getConsultationImages/{consultation_id}','API\QuestionnaireController@getConsultationImages');
 
     // get all consultation 
     Route::match(['POST'],'get_consultaion_detail','API\QuestionnaireController@getConsultaionDetail');
@@ -152,6 +153,11 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::get('get_static_pages_details/{id}','API\AdminController@getStaticPageDetails');
     Route::post('add_static_pages','API\AdminController@addStaticPages');
     Route::delete('delete_static_page/{id}','API\AdminController@deleteStaticPage');
+    
+    //Static page questions
+    Route::get('getQuestionForStaticPage/','API\AdminController@getQuestionForStaticPage');
+    Route::get('getOptionOfQuestion/{question_id}','API\AdminController@getOptionOfQuestion');
+    
     Route::get('get_all_question','API\AdminController@getRootLevelQuestion');
     Route::post('update_question_linking','API\AdminController@updateQuestionLinking');
     Route::get('get_ques_linking_questions','API\AdminController@getQuesLinkingQuestions');
