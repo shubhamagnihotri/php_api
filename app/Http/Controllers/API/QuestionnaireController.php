@@ -807,6 +807,15 @@ class QuestionnaireController extends UtilityController
         return Helper::constructResponse(false,'Image added Successfully',200,[]);
     }
 
+
+    public function getConsultationImages($consultation_id,Request $request){        
+        $userData = $request->user;
+        $user_id = $userData->id;       
+        $fileObj = new Files();
+        $files = $fileObj->getUserConsultationImages($user_id,$consultation_id);
+        return Helper::constructResponse(false,'Images',200,$files);
+    }
+
     // This function returns the static page getQuestionDetails
     // parameter id of the static page
     public function getStaticPage($id){
@@ -816,11 +825,6 @@ class QuestionnaireController extends UtilityController
             return Helper::constructResponse(true,'No content found',401,[]);
         }
         return Helper::constructResponse(false,'',200, $staticPage);
-    }
-
-    public function stripe(){
-        
-        return view('strip');
     }
 
     

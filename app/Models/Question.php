@@ -54,4 +54,14 @@ class Question extends Model
                 ->first();
         return $is_sub_ques;
     }//eo isChildQuestionOfOption()
+
+
+    //Returns the next question details
+    public function getQuestionForStaticPage(){        
+        $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id","is_last_question")
+                ->where('ques_option_type',1)        
+                ->where('ques_parent_option_id',0)         
+                ->first();        
+        return $ques;
+    }//eo getNextQuestion()
 }
