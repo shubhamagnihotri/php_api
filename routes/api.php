@@ -48,6 +48,7 @@ Route::group(['middleware' => ['auth:api','verify.authUser']], function(){
     
 Route::group(['middleware' => ['verify.authUser']], function(){
     Route::post('update_profile','API\OnboardingController@updateProfile');
+    Route::post('change_password','API\OnboardingController@ChangePassword');
     Route::get('userProfile', 'API\OnboardingController@userProfile');
     Route::get('test', 'API\OnboardingController@test');
 

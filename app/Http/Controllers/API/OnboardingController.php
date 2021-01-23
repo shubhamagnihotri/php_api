@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Country;
 use App\Models\CountryState;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 use Validator;
 class OnboardingController extends Controller
 {
@@ -154,7 +155,7 @@ class OnboardingController extends Controller
     }
 
 
-    // registration of user
+    // update  user profile
     public function updateProfile(Request $request){
         $isValidationFailed=$this->validationServiceObject->validateupdateProfile($request->all());
         if ($isValidationFailed) {
@@ -169,6 +170,31 @@ class OnboardingController extends Controller
         $user->role = $role;
         $response['data'] = $user;
         return response()->json($response);
+    }
+
+    public function ChangePassword(Request $request){
+        $isValidationFailed=$this->validationServiceObject->validateChangePassword($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+        $userData = $request->all();
+        $user_id = $request->user->id;
+        $userObj = new User();
+        $user_details = $userObj->getUserDetailsById($user_id);
+        
+        $user_password = $user_details->password;
+        $new_password = $userData['new_password'];
+        $password = $userData['password'];
+       
+
+        if(Hash::check($password, $user_password)){
+            $bcrypt_passowd = bcrypt($new_password);
+            $userObj->updatePassword($user_id,$bcrypt_passowd);
+            return Helper::constructResponse(false,'Password changed.',200,[]);
+        }
+        else{
+            return Helper::constructResponse(true,'Invalid password',400,[]);
+        }        
     }
 
     // google signup

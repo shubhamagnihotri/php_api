@@ -110,7 +110,7 @@ class PaymentController extends UtilityController
                  $consultantObj = new Consultant();
                  $consultantObj->markConsultationAsPaymentDone($consultation_id);
              }
-            return Helper::constructResponse(true,'payment done',401,$data);
+            return Helper::constructResponse(false,'payment done',200,$data);
         } catch (\Exception $e) {
             $payment_data = array(
                 "consultation_id" => $consultation_id,
@@ -120,9 +120,7 @@ class PaymentController extends UtilityController
                 "status" => 0,                
                 "created_at" => date("Y-m-d H:i:s")
             );
-            $paymentDetailsObj->save_data($payment_data);
-            
-            
+            $paymentDetailsObj->save_data($payment_data);                        
             return Helper::constructResponse(true,'Invalid payment details',401,[]);
         }
     }

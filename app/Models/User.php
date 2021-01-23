@@ -60,4 +60,13 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function getUserDetailsById($id){
+        $user_details = User::where('id',$id)->first();
+        return $user_details;
+    }
+
+    public function updatePassword($user_id,$password){
+        $userSignUp=User::where('id',$user_id)->update(["password"=>$password]);
+    }
 }
