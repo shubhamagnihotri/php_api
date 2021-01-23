@@ -161,6 +161,32 @@ class ValidationService
         return false;
     }
 
+
+    public function validateChangePassword($formData)
+    {
+        $validation['rules'] = [
+            'password' => ['required','min:8'],
+            'new_password' => ['required','min:8'],
+            'confirm_password' => ['required','same:new_password'],            
+        ];
+        $validation['messages'] = [            
+            'password.required'=>'Password is required',
+            'password.min'=>'Password Should me minimum 8 character',
+            'new_password.required'=>'Password is required',
+            'new_password.min'=>'Password Should me minimum 8 character',
+            'confirm_password.min'=>'Confirm Password is required',
+            'confirm_password.same'=>'Confirm Password should be same as password',
+            'temp_token.required'=>'Can not proceed',
+        ];
+        
+        $validation = Validator::make($formData, $validation['rules'], $validation['messages']);
+        if ($validation->fails()) {
+            $apiResponse = $validation->errors();
+            return Helper::constructResponse(true,'validation error',400,$apiResponse);
+        }
+        return false;
+    }
+
     
     /**
      * validate login

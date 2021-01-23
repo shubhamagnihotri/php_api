@@ -492,10 +492,12 @@ class QuestionnaireController extends UtilityController
         if($request->input('status')){                       
             $consultations = $consultations->where('consultant_status',$request->input('status'));
         }
-        if($request->input('page_number')){
+        if($request->input('page_number')){;                       
             $no_of_record = 3;
             $page_number = $request->input('page_number');
-            $start_limit = ($page_number*$no_of_record);
+            
+            $page_number = $page_number -1;
+            $start_limit = ($page_number*$no_of_record);                             
             $consultations = $consultations->offset($start_limit)->limit($no_of_record);
         }
         
