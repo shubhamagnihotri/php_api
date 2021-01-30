@@ -300,24 +300,40 @@ class AdminController extends Controller
     public function getConfigurableNextQuestion($question_id){
         $questionObj =new Question();
         $questionOptionObj = new QuestionOption();
-        $question = $questionObj->getFirstQuestion();
-        $options = $questionOptionObj->getOptionOfQuestion($firstQuestion->id);
-        if($firstQuestion->ques_option_type == 1){
-            foreach($options as $option){
-                
-                $subQuestion = $this->getConfigurableSubQUestions($option->id);
-                if($subQuestion){
-                    $option['question'] = $subQuestion;
+        $question = $questionObj->getQuestionDetails($question_id);
+        if($question)
+        {
+            $options = $questionOptionObj->getOptionOfQuestion($question->id);
+            $question['options'] = $options; 
+            if($question->ques_option_type == 1){
+                    foreach($options as $option){
+                        
+                        $subQuestion = $this->getConfigurableSubQUestions($option->id);
+                        if($subQuestion){
+                            $option['question'] = $subQuestion;
+                        }
+                    }
                 }
-            }
         }
-        $question['options'] = $options; 
-        $questions[] = $question;
-        if(!$question->is_last_question){
-            if($question->next_question_id){
-                $questions[]=$this->getConfigurableNextQuestion($question->next_question_id);
-            }
-        }
+        
+        // if($question->ques_option_type == 1){
+        //     foreach($options as $option){
+                
+        //         $subQuestion = $this->getConfigurableSubQUestions($option->id);
+        //         if($subQuestion){
+        //             $option['question'] = $subQuestion;
+        //         }
+        //     }
+        // }
+        
+        
+        // if(!$question->is_last_question){
+        //     if($question->next_question_id){
+        //         return $this->getConfigurableNextQuestion($question->next_question_id);
+        //     }
+        // }
+        return $question;
+        
         
 
         return $questions;
@@ -327,8 +343,47 @@ class AdminController extends Controller
     {
         // echo $option_id;
         $questionObj =new Question();
-        $childQuestions =  $questionObj->isChildQuestionOfOption($option_id);
-        return $childQuestions;
+        $questionOptionObj = new QuestionOption();
+        $question =  $questionObj->isChildQuestionOfOption($option_id);
+        if($question)
+        {
+            $options = $questionOptionObj->getOptionOfQuestion($question->id);
+            $question['options'] = $options; 
+            if($question->ques_option_type == 1){
+                    foreach($options as $option){
+                        
+                        $subQuestion = $this->getConfigurableSubQUestions($option->id);
+                        if($subQuestion){
+                            $questions = array();
+                            $questions[] = $subQuestion;
+                            
+                            $next_question_id = $subQuestion->next_question_id;                            
+                            do{
+
+                                $q = $this->getConfigurableNextQuestion($next_question_id);
+                                
+                                $next_question_id = 0;
+                                if($q){
+                                    if($q->ques_level != 1)
+                                    {
+                                        $questions[] = $q;
+                                        if(!$q->is_last_question ){
+                                            if($q->next_question_id){
+                                                $next_question_id = $q->next_question_id;
+                                            }
+                                        }
+                                    }
+                                    
+                                }
+                                
+                            }while($next_question_id);
+                            $option['questions'] = $questions;
+                           
+                        }
+                    }
+                }
+        }
+        return $question;
     }
 
     public function getConfigurableQuestions(){
@@ -336,9 +391,9 @@ class AdminController extends Controller
         $questionOptionObj = new QuestionOption();
         $firstQuestion = $questionObj->getFirstQuestion();
         $options = $questionOptionObj->getOptionOfQuestion($firstQuestion->id);
+        $next_question_id = $firstQuestion->next_question_id;
         if($firstQuestion->ques_option_type == 1){
-            foreach($options as $option){
-                
+            foreach($options as $option){                
                 $subQuestion = $this->getConfigurableSubQUestions($option->id);
                 if($subQuestion){
                     $option['question'] = $subQuestion;
@@ -346,8 +401,26 @@ class AdminController extends Controller
             }
         }
         $firstQuestion['options'] = $options; 
+        $questions = array();
+        $questions[] = $firstQuestion;
+        do{
 
-        return Helper::constructResponse(false,'',200,$firstQuestion);
+            $q = $this->getConfigurableNextQuestion($next_question_id);
+            $questions[] = $q;
+            $next_question_id = 0;
+            if($q){
+                if(!$q->is_last_question){
+                    if($q->next_question_id){
+                        $next_question_id = $q->next_question_id;
+                    }
+                }
+            }
+            
+        }while($next_question_id);
+
+        // $questions[] = $this->getConfigurableNextQuestion($next_question_id);
+
+        return Helper::constructResponse(false,'',200,$questions);
     }
 
 
