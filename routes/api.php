@@ -89,6 +89,7 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 
     Route::post('stripe', 'API\PaymentController@stripePost')->name('stripe.post');
 
+    Route::post('product_by_concern/{id}', 'API\QuestionnaireController@productByConcern')->name('product.concernProduct');
 
 });
 //close verify.authUser middleware 
