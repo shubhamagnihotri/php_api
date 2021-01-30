@@ -36,7 +36,39 @@ class BusinessLogicService
             'created_at'=>Carbon::now()
         ]);
         if($otpGenearted ){
-            $data = array('name'=>'','toName'=>"",'toEmail'=>$formData['email'],'otp'=>$otp,'subject'=>'One Time Otp for email verification','fromEmail'=>config("app.imap_hostname"),'fromName'=>config("app.imap_hostfromname")); 
+            $data = array('name'=>'','toName'=>"",'toEmail'=>$formData['email'],'otp'=>$otp,'subject'=>'One Time Password for email verification','fromEmail'=>config("app.imap_hostname"),'fromName'=>config("app.imap_hostfromname")); 
+            Mail::send('mails.mail', $data, function($message) use ($data) {
+            
+                $message->to($data['toEmail'], $data['toName'])->subject($data['subject']);
+                $message->from($data['fromEmail'],$data['fromName']);
+            });
+            return Helper::constructResponse(false,'Otp generated successfully!',200,[]);
+        }else{
+            return Helper::constructResponse(true,'Otp not generated!',401,[]);
+        }
+    }
+
+
+    public function resend_otp($formData)
+    {
+       
+      
+        $isUserSignedUp=User::where('email',$formData['email'])->first();
+        if(!$isUserSignedUp){
+            return Helper::constructResponse(true,'You are not a registered user',401,[]);
+        }
+        $bytes = random_bytes(50);
+        $temp_token= bin2hex($bytes);
+        $otp = mt_rand(100000,999999);
+        $otpGenearted = Otp::insert([
+            'email'=>$formData['email'],
+            'email_otp'=> $otp ,
+            'temp_token'=>$temp_token,
+            'status'=>1,
+            'created_at'=>Carbon::now()
+        ]);
+        if($otpGenearted ){
+            $data = array('name'=>'','toName'=>"",'toEmail'=>$formData['email'],'otp'=>$otp,'subject'=>'One Time Password for email verification','fromEmail'=>config("app.imap_hostname"),'fromName'=>config("app.imap_hostfromname")); 
             Mail::send('mails.mail', $data, function($message) use ($data) {
             
                 $message->to($data['toEmail'], $data['toName'])->subject($data['subject']);
@@ -52,13 +84,13 @@ class BusinessLogicService
     {
         $isUserSignedUp=User::where('email',$formData['email'])->first();
         if(!$isUserSignedUp){
-            return Helper::constructResponse(true,'Sign up not done',401,[]);
+            return Helper::constructResponse(true,'Email is not registered with us',401,[]);
         }
         if($isUserSignedUp->signup_type == '1'){
-            return Helper::constructResponse(true,'Forget password is not possible !Please login with google',401,[]);
+            return Helper::constructResponse(true,'Email is not registered with us',401,[]);
         }   
         if($isUserSignedUp->signup_type == '2'){
-            return Helper::constructResponse(true,'Forget password is not possible !Please login with facebook',401,[]);
+            return Helper::constructResponse(true,'Email is not registered with us',401,[]);
         }
         $bytes = random_bytes(50);
         $temp_token= bin2hex($bytes);
@@ -71,7 +103,7 @@ class BusinessLogicService
             'created_at'=>Carbon::now()
         ]);
         if($otpGenearted ){
-            $data = array('name'=>$isUserSignedUp['fname']." ".$isUserSignedUp['lname'],'toName'=>$isUserSignedUp['fname']." ".$isUserSignedUp['lname'],'toEmail'=>$formData['email'],'otp'=>$otp,'subject'=>'One Time Otp for change password verification','fromEmail'=>config("app.imap_hostname"),'fromName'=>config("app.imap_hostfromname")); 
+            $data = array('name'=>$isUserSignedUp['fname']." ".$isUserSignedUp['lname'],'toName'=>$isUserSignedUp['fname']." ".$isUserSignedUp['lname'],'toEmail'=>$formData['email'],'otp'=>$otp,'subject'=>'One Time Password for change password verification','fromEmail'=>config("app.imap_hostname"),'fromName'=>config("app.imap_hostfromname")); 
             Mail::send('mails.mail', $data, function($message) use ($data) {
             
                 $message->to($data['toEmail'], $data['toName'])->subject($data['subject']);

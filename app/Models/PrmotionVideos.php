@@ -18,4 +18,10 @@ class PrmotionVideos extends Model
     protected $primaryKey = 'id';
     protected $table = 'promotion_videos';
     public $timestamps = true;
+
+
+    public function deletePromotionVideo($video_id){
+        return PrmotionVideos::where('id', $video_id)               
+                ->delete();
+    }
 }

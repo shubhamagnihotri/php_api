@@ -35,6 +35,17 @@ class OnboardingController extends Controller
        return response()->json($response);
     }
 
+    // Resend otp
+    public function resend_otp(Request $request){
+
+        $isValidationFailed=$this->validationServiceObject->validateGenerateOtp($request->all());
+        if ($isValidationFailed) {
+            return response()->json($isValidationFailed, 400);
+        }
+       $response = $this->businessLogicServiceObject->resend_otp($request->all());
+       return response()->json($response);
+    }//eo resend_otp()
+
     public function getEthnicity(Request $request){
         $a = config('app-config.ethnicity');
         return Helper::constructResponse(false,'',200,$a);
@@ -228,7 +239,7 @@ class OnboardingController extends Controller
         $userDetail = User::where('social_media_id',$request->input('social_media_id'))->first();
        
         if(!$userDetail){
-            return Helper::constructResponse(true,'Signup not done',401,[]);
+            return Helper::constructResponse(true,'You are not a registered users',401,[]);
         }
         $request->request->add(['email'=>$userDetail->email]); 
         $request->request->add(['password'=>$request->input('social_media_id')]);

@@ -610,8 +610,10 @@ class QuestionnaireController extends UtilityController
             }else{
                 $consultations['car_generated_days']=0;
             }
-            $appointments=Appointment::join('appointment_prices','appointment_prices.id','appointments.appointment_type')->where('user_id',$user_id)->where('consultation_id',$id)
-            ->whereDate('appointment_date','>=',Carbon::now())->get();
+            $appointments=Appointment::leftJoin('appointment_prices','appointment_prices.id','appointments.appointment_type')
+                ->select('appointments.*','appointment_prices.appointment_price','appointment_prices.appointment_duration')
+                ->where('user_id',$user_id)->where('consultation_id',$id)
+                ->whereDate('appointment_date','>=',Carbon::now())->get();
             $consultations['appointments']=$appointments;
             $files= Files::where('user_id',$user_id)->where('consultation_id',$id)->get();
             $consultations['files']=  $files;
@@ -665,29 +667,81 @@ class QuestionnaireController extends UtilityController
         $validation['rules'] = [
             'appointment_date' => ['required'],
             'appointment_time'=>['required'],
+            'appointment_end_time'=>['required'],
             'appointment_type'=>['required'],
             'consultation_id'=>['required']
         ];
         $validation['messages'] = [
-            'appointment_date.required' => 'Appointment date is required',
-            'appointment_time.required' => 'Appointment Time is required',
-            'appointment_type.required' => 'Please provide all params',
-            'consultation_id.required' => 'Please provide all params',
+            'appointment_date.required' => trans('validation.appointment.required_date'),
+            'appointment_time.required' => trans('validation.appointment.required_start_time'),
+            'appointment_end_time.required' => trans('validation.appointment.required_end_time'),
+            'appointment_type.required' => trans('validation.appointment.required_type'),
+            'consultation_id.required' => trans('validation.appointment.required_consultation_id')            
         ];
         $validation =  Validator::make($request->all(),$validation['rules'], $validation['messages']);
         if ($validation->fails()) {
             $apiResponse = $validation->errors();
-            return Helper::constructResponse(true,'validation error',400,$apiResponse);
+            return Helper::constructResponse(true,trans('validation.validation_error'),400,$apiResponse);
         }
         $converted_time = date("H:i:s", strtotime($request->input('appointment_time')));
-        $insert_data = ['appointment_date'=>$request->input('appointment_date'),'appointment_time'=>$converted_time,'appointment_type'=>$request->input('appointment_type'),'consultation_id'=>$request->input('consultation_id'),
+        $appointment_end_time = date("H:i:s", strtotime($request->input('appointment_end_time')));
+        $insert_data = ['appointment_date'=>$request->input('appointment_date'),'appointment_time'=>$converted_time,'appointment_end_time'=>$appointment_end_time,'appointment_type'=>$request->input('appointment_type'),'consultation_id'=>$request->input('consultation_id'),
         'user_id'=>$request->user->id];
      
         $inserted= Appointment::insert($insert_data);
         if($inserted){
-            return Helper::constructResponse(false,'Appointment Scheduled sucessfully',200,[]);
+            return Helper::constructResponse(false,trans('message.appointments.success_schedule_appointment'),200,[]);
         }else{
-            return Helper::constructResponse(true,'Appointment not Scheduled',200,[]);
+            return Helper::constructResponse(true,trans('message.appointments.fail_schedule_appointment'),200,[]);
+        }
+    }
+
+
+    public function rescheduleConsultationAppointment(Request $request){
+        $validation['rules'] = [
+            'appointment_date' => ['required'],
+            'appointment_time'=>['required'],
+            'appointment_end_time'=>['required'],
+            'appointment_type'=>['required'],
+            'consultation_id'=>['required'],
+            'appointment_id'=>['required']
+        ];
+        $validation['messages'] = [
+            'appointment_date.required' => trans('validation.appointment.required_date'),
+            'appointment_time.required' => trans('validation.appointment.required_start_time'),
+            'appointment_end_time.required' => trans('validation.appointment.required_end_time'),
+            'appointment_type.required' => trans('validation.appointment.required_type'),
+            'consultation_id.required' => trans('validation.appointment.required_consultation_id'),
+            'appointment_id.required' => trans('validation.appointment.required_appointment_id'),
+        ];
+        $validation =  Validator::make($request->all(),$validation['rules'], $validation['messages']);
+        if ($validation->fails()) {
+            $apiResponse = $validation->errors();
+            return Helper::constructResponse(true,trans('validation.validation_error'),400,$apiResponse);
+        }
+        $converted_time = date("H:i:s", strtotime($request->input('appointment_time')));
+        $appointment_end_time = date("H:i:s", strtotime($request->input('appointment_end_time')));
+        $update_data = ['appointment_date'=>$request->input('appointment_date'),'appointment_time'=>$converted_time,'appointment_end_time'=>$appointment_end_time,'appointment_type'=>$request->input('appointment_type'),'consultation_id'=>$request->input('consultation_id'),
+        'user_id'=>$request->user->id];
+     
+        $appointmentObj = new Appointment();
+        $updated= $appointmentObj->rescheduleAppointment($request->input('appointment_id'),$update_data);
+        if($updated){
+            return Helper::constructResponse(false,trans('message.appointments.success_reschedule_appointment'),200,[]);
+        }else{
+            return Helper::constructResponse(true,trans('message.appointments.fail_reschedule_appointment'),401,[]);
+        }
+    }
+
+    public function cancelAppointment($appointment_id,Request $request){
+        $userData = $request->user;
+        $user_id = $userData->id;
+        $appointmentObj = new Appointment();
+        $updated= $appointmentObj->cancelAppointment($appointment_id,$user_id);
+        if($updated){
+            return Helper::constructResponse(false,trans('message.appointments.success_cancel_appointment'),200,[]);
+        }else{
+            return Helper::constructResponse(true,trans('message.appointments.fail_cancel_appointment'),401,[]);
         }
     }
 
@@ -807,6 +861,27 @@ class QuestionnaireController extends UtilityController
             $consultObj->markConsultationAsImageSubmitted($consultation_id);
         }
         return Helper::constructResponse(false,'Image added Successfully',200,[]);
+    }
+
+
+    // Delete the Consultation Image by a registered user
+    // Only can delete uploaded image
+    public function deleteConsultationImages($image_id,$consultation_id,Request $request){        
+        $formData = $request->all();
+        $userData = $request->user;
+        $user_id = $userData->id;
+        $fileObj = new Files();
+
+        $path = $fileObj->getImagePath($image_id);
+        if($path){           
+            // $imageName = basename($path->file_url);             
+            // Storage::disk('s3')->delete(config("app.aws_bucket_environment").$imageName);
+            if($fileObj->deleteImageByUser($user_id,$consultation_id,$image_id)){
+                // Storage::disk('s3')->delete(config("app.aws_bucket_environment")."/consultation". $imageName);
+                return Helper::constructResponse(false,trans('message.consultation.image_deleted'),200,[]);
+            }                      
+        }                      
+        return Helper::constructResponse(true,trans('message.consultation.image_delete_fail'),401,[]);
     }
 
 

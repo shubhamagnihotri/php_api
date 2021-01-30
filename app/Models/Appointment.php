@@ -15,4 +15,16 @@ class Appointment extends Model
         Appointment::where('id', $id)
         ->update(['payment_status' => 1]);
     }
+
+    public function rescheduleAppointment($id,$update_data){
+        return Appointment::where('id', $id)
+        ->update($update_data);
+    }
+    public function cancelAppointment($id,$user_id){
+        return Appointment::where('id', $id)
+                ->where('user_id', $user_id)
+                ->update(['appointment_status' => 2]); //cancel
+    }
+
+
 }

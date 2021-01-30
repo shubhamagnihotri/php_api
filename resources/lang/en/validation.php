@@ -1,7 +1,15 @@
 <?php
 
 return [
-
+    'validation_error'=>'Validation Error',
+    'appointment'=>[
+        'required_date'=>'Date is required',
+        'required_start_time'=>'Start time is required',
+        'required_end_time'=>'End time is required',
+        'required_type'=>'Appointment type is required',
+        'required_consultation_id'=>'Consultation id is required',
+        'required_appointment_id'=>'Appointment id is required'
+    ],
     /*
     |--------------------------------------------------------------------------
     | Validation Language Lines
