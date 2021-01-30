@@ -145,7 +145,7 @@ class QuestionnaireController extends UtilityController
         $gender_code = $userData->gender;
         $dob = $userData->date_of_birth;       
         $age = $this->getAgeFromDOB($dob);
-        $gender_id =1;// $this->getGenderIdByShortCode($gender_code);        
+        $gender_id =  $this->getGenderIdByShortCode($gender_code);        
         
         $quesObj = new Question();
         $optionObj = new QuestionOption();
@@ -612,7 +612,9 @@ class QuestionnaireController extends UtilityController
             }
             $appointments=Appointment::leftJoin('appointment_prices','appointment_prices.id','appointments.appointment_type')
                 ->select('appointments.*','appointment_prices.appointment_price','appointment_prices.appointment_duration')
-                ->where('user_id',$user_id)->where('consultation_id',$id)
+                ->where('user_id',$user_id)
+                ->where('consultation_id',$id)
+                ->where('appointment_status','!=',2)
                 ->whereDate('appointment_date','>=',Carbon::now())->get();
             $consultations['appointments']=$appointments;
             $files= Files::where('user_id',$user_id)->where('consultation_id',$id)->get();
