@@ -91,6 +91,8 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 
     Route::post('product_by_concern/{id}', 'API\QuestionnaireController@productByConcern')->name('product.concernProduct');
 
+    Route::post('get_prom_video','API\QuestionnaireController@getPromVideo');
+
 });
 //close verify.authUser middleware 
 
