@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Models\Question;
 use App\Models\QuestionOption;
 use App\Models\QuesCondition;
+use App\Models\PrmotionVideos;
+
 use App\Models\Consultant;
 use App\Models\QuesAnswerConsultant;
 use App\Models\Files;
@@ -943,6 +945,14 @@ class QuestionnaireController extends UtilityController
         return Helper::constructResponse(false,'',200,$data);  
     }
 
-    
+    public function getPromVideo(Request $request){
+        $formData = $request->all();
+        if(isset($formData['video_level']) && !empty($formData['video_level'])){
+            $prom_video=PrmotionVideos::where('video_level',$formData['video_level'])->first();
+        }else{
+            $prom_video= PrmotionVideos::get();
+        }
+       return Helper::constructResponse(false,'',200,$prom_video);
+    }
 
 }
