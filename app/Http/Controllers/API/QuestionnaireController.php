@@ -947,7 +947,7 @@ class QuestionnaireController extends UtilityController
 
     public function getPromVideo(Request $request){
         $formData = $request->all();
-        if(isset($formData['video_level']) && !empty($formData['video_level'])){
+        if(isset($formData['video_level']) && !empty($formData['video_level']) || $formData['video_level']== '0'){
             $prom_video=PrmotionVideos::where('video_level',$formData['video_level'])->first();
         }else{
             $prom_video= PrmotionVideos::get();
