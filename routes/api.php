@@ -89,6 +89,7 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 
     Route::post('stripe', 'API\PaymentController@stripePost')->name('stripe.post');
 
+    Route::post('product_by_concern/{id}', 'API\QuestionnaireController@productByConcern')->name('product.concernProduct');
 
 });
 //close verify.authUser middleware 
@@ -103,8 +104,6 @@ Route::group(['prefix' => 'admin'], function(){
     Route::post('generate_password','API\OnboardingController@generatePassword');
     Route::post('forget_password','API\OnboardingController@forgetPassword');
     Route::post('update_forget_password','API\OnboardingController@updateForgetPassword');
-
-    
 });
 
 

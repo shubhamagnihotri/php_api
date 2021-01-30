@@ -1185,11 +1185,7 @@ class BusinessLogicService
         }else{
             $prom_video= PrmotionVideos::get();
         }
-     
-       return Helper::constructResponse(true,'',200,$prom_video);
-    //    if($prom_video){
-      
-    //    }
+       return Helper::constructResponse(false,'',200,$prom_video);
     }
 
     public function getStaticPagesDetails($formData){

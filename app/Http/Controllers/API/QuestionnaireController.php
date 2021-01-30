@@ -912,6 +912,28 @@ class QuestionnaireController extends UtilityController
         return 4;
     }
 
+    public function productByConcern(Request $request,$id){
+        $formData= $request->all();
+        // dd($formdata);
+        $allProduct = Product::select('products.id','products.product_title','products.product_url')->join('product_associated_concern_mapping as pacm','pacm.product_id','products.id')->where('pacm.product_concern_id',$id)->where('products.product_status',1);
+        if(isset($formData['search_by_text'])){
+             
+            $allProduct= $allProduct->where('products.product_title','like','%'.$formData['search_by_text'].'%');
+        }
+        $count =  $allProduct;
+        if(isset($formData['page'])){
+            $start_limit = ($formData['page'])*$formData['no_of_record'];
+            $allProduct = $allProduct->offset($start_limit)->limit($formData['no_of_record']);
+        }
+        $data['allProduct']=$allProduct->get();
+        foreach($data['allProduct'] as $product){
+            $images = ProductImages::select('product_image_url','id')->where('id',$product['id'])->first();
+            $product['images']=  $images;
+        }
+        $data['count'] = $count->count();
+        return Helper::constructResponse(false,'',200,$data);  
+    }
+
     
 
 }
