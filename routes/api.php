@@ -103,8 +103,6 @@ Route::group(['prefix' => 'admin'], function(){
     Route::post('generate_password','API\OnboardingController@generatePassword');
     Route::post('forget_password','API\OnboardingController@forgetPassword');
     Route::post('update_forget_password','API\OnboardingController@updateForgetPassword');
-
-    
 });
 
 
