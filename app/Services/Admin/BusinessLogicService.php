@@ -1160,7 +1160,7 @@ class BusinessLogicService
         }
         $updatedata['updated_at'] = date("Y-m-d H:i:s");
         if($formData['video_level'] == '2'){
-            $updatedata['play_after_ques_id'] =$formData['play_after_ques_id'];
+            $updatedata['play_before_ques_id'] =$formData['play_before_ques_id'];
         }
         $prom_video=PrmotionVideos::where('video_level',$updatedata['video_level'])->first();
         if($prom_video){
@@ -1423,6 +1423,7 @@ class BusinessLogicService
         $options = $optionObj->getOptionOfQuestion($question_id);
         return Helper::constructResponse(false,'Option',200,$options);  
     }
+
 
 
 
