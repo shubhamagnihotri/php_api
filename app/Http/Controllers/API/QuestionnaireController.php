@@ -492,7 +492,8 @@ class QuestionnaireController extends UtilityController
         if($request->input('status')){                       
             $consultations = $consultations->where('consultant_status',$request->input('status'));
         }
-        if($request->input('page_number')){;                       
+        $count =  $consultations;
+        if($request->input('page_number')){                       
             $no_of_record = 3;
             $page_number = $request->input('page_number');
             
@@ -526,16 +527,25 @@ class QuestionnaireController extends UtilityController
             $files= Files::where('user_id',$user_id)->where('consultation_id',$consult['id'])->get();
             $consult['files']=  $files;
        }
-       return Helper::constructResponse(false,'',200,['consultation_detail'=>$consultations]);
+       return Helper::constructResponse(false,'',200,['consultation_detail'=>$consultations,'count'=>$count]);
     }
 
      //start get consultaion detail 
     public function getSheduledAppointments(Request $request){
+        $formData = $request->all();
         $shedule_appointment = Consultant::join('appointments','consultations.id','appointments.consultation_id')
         ->where('appointments.appointment_status','!=','2')
         ->where('consultations.user_id','=',$request->user->id)
-        ->whereIn('consultations.consultant_status',[3])->get();
-        return Helper::constructResponse(false,'',200,$shedule_appointment);
+        ->whereIn('consultations.consultant_status',[3]);
+        $count =  $shedule_appointment;
+        if(isset($formData['page'])){
+            $start_limit = ($formData['page'])*$formData['no_of_record'];
+            $shedule_appointment = $allProduct->offset($start_limit)->limit($formData['no_of_record']);
+        }
+        $shedule_appointment = $shedule_appointment->get();
+     
+
+        return Helper::constructResponse(false,'',200,['shedule_appointment'=>$shedule_appointment,'count'=>$count->count()]);
     }
     
 
