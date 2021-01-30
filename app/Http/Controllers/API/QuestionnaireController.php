@@ -532,13 +532,20 @@ class QuestionnaireController extends UtilityController
 
      //start get consultaion detail 
     public function getSheduledAppointments(Request $request){
+        $formData = $request->all();
         $shedule_appointment = Consultant::join('appointments','consultations.id','appointments.consultation_id')
         ->where('appointments.appointment_status','!=','2')
         ->where('consultations.user_id','=',$request->user->id)
-        ->whereIn('consultations.consultant_status',[3])->get();
-        $count =  $shedule_appointment->count();
+        ->whereIn('consultations.consultant_status',[3]);
+        $count =  $shedule_appointment;
+        if(isset($formData['page'])){
+            $start_limit = ($formData['page'])*$formData['no_of_record'];
+            $shedule_appointment = $allProduct->offset($start_limit)->limit($formData['no_of_record']);
+        }
+        $shedule_appointment = $shedule_appointment->get();
+     
 
-        return Helper::constructResponse(false,'',200,['shedule_appointment'=>$shedule_appointment,'count'=>$count]);
+        return Helper::constructResponse(false,'',200,['shedule_appointment'=>$shedule_appointment,'count'=>$count->count()]);
     }
     
 
