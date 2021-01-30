@@ -36,6 +36,7 @@ Route::group(['middleware' => ['auth:api','verify.authUser']], function(){
 //close auth prefix
 
     Route::post('generate_otp','API\OnboardingController@generateOtp');
+    Route::post('resend_otp','API\OnboardingController@resend_otp');
     Route::post('validate_otp','API\OnboardingController@validateOtp');
     Route::post('generate_password','API\OnboardingController@generatePassword');
     Route::post('social_media_signUp','API\OnboardingController@socialMediaSignUp');
@@ -61,6 +62,7 @@ Route::group(['middleware' => ['verify.authUser']], function(){
     Route::match(['POST'],'check_and_get_sub_question','API\QuestionnaireController@checkAndGetSubQuestion');
 
     Route::match(['POST'],'uploadConsultationImages','API\QuestionnaireController@uploadConsultationImage');
+    Route::match(['DELETE'],'deleteConsultationImages/{image_id}/{consultation_id}','API\QuestionnaireController@deleteConsultationImages');
     Route::match(['GET'],'getConsultationImages/{consultation_id}','API\QuestionnaireController@getConsultationImages');
 
     // get all consultation 
@@ -76,6 +78,8 @@ Route::group(['middleware' => ['verify.authUser']], function(){
 
      //add consulation feedback from user 
      Route::match(['POST'],'add_consultation_appointment','API\QuestionnaireController@addConsultationAppointment');
+     Route::match(['POST'],'reschedule_consultation_appointment','API\QuestionnaireController@rescheduleConsultationAppointment');
+     Route::match(['POST'],'cancel_appointment/{appointment_id}','API\QuestionnaireController@cancelAppointment');
     // get available appointmnet slots
     Route::match(['POST'],'get_consultation_slots','API\QuestionnaireController@getConsultationSlots');
 
@@ -148,6 +152,9 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
     Route::get('delete_ques_option/{id}','API\AdminController@deleteQuesOption');
     Route::post('edit_question/{id}','API\AdminController@editQuestion');
     Route::post('update_video','API\AdminController@updateVideo');
+
+    Route::delete('delete_promotion_video/{video_id}','API\AdminController@deletePromotionVideo');
+
     Route::get('get_prom_video','API\AdminController@getPromVideo');
 
     Route::get('get_static_pages_details','API\AdminController@getStaticPagesDetails');
@@ -166,6 +173,9 @@ Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function
 
     // recommended product 
     Route::post('recommended_products','API\AdminController@recommendedProducts');
+
+    Route::get('getConfigurableQuestions','API\AdminController@getConfigurableQuestions');
+
 });
 
 Route::post('upload_image','API\AdminController@uploadImage');

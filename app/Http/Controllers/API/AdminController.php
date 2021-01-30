@@ -14,6 +14,7 @@ use App\Models\Consultant;
 use App\Models\QuesAnswerConsultant;
 use App\Models\Files;
 use App\Models\Appointment;
+use App\Models\PrmotionVideos;
 use Validator;
 use App\Services\Admin\BusinessLogicService;
 use App\Services\Admin\ValidationService;
@@ -295,6 +296,71 @@ class AdminController extends Controller
         $response = $this->businessLogicServiceObject->getOptionOfQuestion($question_id);
         return response()->json($response);
     }
+
+    public function getConfigurableNextQuestion($question_id){
+        $questionObj =new Question();
+        $questionOptionObj = new QuestionOption();
+        $question = $questionObj->getFirstQuestion();
+        $options = $questionOptionObj->getOptionOfQuestion($firstQuestion->id);
+        if($firstQuestion->ques_option_type == 1){
+            foreach($options as $option){
+                
+                $subQuestion = $this->getConfigurableSubQUestions($option->id);
+                if($subQuestion){
+                    $option['question'] = $subQuestion;
+                }
+            }
+        }
+        $question['options'] = $options; 
+        $questions[] = $question;
+        if(!$question->is_last_question){
+            if($question->next_question_id){
+                $questions[]=$this->getConfigurableNextQuestion($question->next_question_id);
+            }
+        }
+        
+
+        return $questions;
+    }
+
+    public function getConfigurableSubQUestions($option_id)
+    {
+        // echo $option_id;
+        $questionObj =new Question();
+        $childQuestions =  $questionObj->isChildQuestionOfOption($option_id);
+        return $childQuestions;
+    }
+
+    public function getConfigurableQuestions(){
+        $questionObj =new Question();
+        $questionOptionObj = new QuestionOption();
+        $firstQuestion = $questionObj->getFirstQuestion();
+        $options = $questionOptionObj->getOptionOfQuestion($firstQuestion->id);
+        if($firstQuestion->ques_option_type == 1){
+            foreach($options as $option){
+                
+                $subQuestion = $this->getConfigurableSubQUestions($option->id);
+                if($subQuestion){
+                    $option['question'] = $subQuestion;
+                }
+            }
+        }
+        $firstQuestion['options'] = $options; 
+
+        return Helper::constructResponse(false,'',200,$firstQuestion);
+    }
+
+
+    // this function delete the video accroding to id
+    public function deletePromotionVideo($video_id){
+        $prmotionVideosObj = new PrmotionVideos();
+        $status =  $prmotionVideosObj->deletePromotionVideo($video_id);
+        if($status){
+            return Helper::constructResponse(false,trans('message.video.success_delete'),200,[]);
+        }else{
+            return Helper::constructResponse(true,trans('message.video.fail_delete'),401,[]);
+        }
+    }//eo deletePromotionVideo()
 
 
 

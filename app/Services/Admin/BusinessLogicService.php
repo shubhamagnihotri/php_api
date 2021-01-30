@@ -495,9 +495,9 @@ class BusinessLogicService
              
             $proImage= ProductImages::select('product_image_url')->where('product_id',$product['id'])->whereNotNull('product_image_url')->first();
             if($proImage){
-                    $product['prdouct_image']=$proImage->product_image_url;
+                    $product['product_image']=$proImage->product_image_url;
             }else{
-                    $product['prdouct_image']='';
+                    $product['product_image']='';
             }
 
             }
@@ -1150,7 +1150,8 @@ class BusinessLogicService
     }
 
     public function updateVideo($formData){
-        $updatedata=[];
+        $updatedata=[]; 
+
         $updatedata['video_title'] = $formData['video_title'];
         $updatedata['video_level'] = $formData['video_level'];
         if(isset($formData['video_file']) && !empty($formData['video_file'])){
@@ -1169,10 +1170,11 @@ class BusinessLogicService
             $updatedata['created_at'] = date("Y-m-d H:i:s");
             $in_inserted=PrmotionVideos::insert($updatedata);
         }
-        if($in_inserted){
-            return Helper::constructResponse(false,'Video updated Successfully',200,[]);
+         if($in_inserted){
+             $return_data = array('video'=>$updatedata['video_url']);
+            return Helper::constructResponse(false,trans('message.video.success_upload'),200, $return_data);
         }else{
-            return Helper::constructResponse(true,'Video not updated Successfully',200,[]);
+            return Helper::constructResponse(true,trans('message.video.success_upload'),200,[]);
         }
 
     }
