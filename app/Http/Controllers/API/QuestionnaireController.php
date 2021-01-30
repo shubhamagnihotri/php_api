@@ -540,11 +540,10 @@ class QuestionnaireController extends UtilityController
         $count =  $shedule_appointment;
         if(isset($formData['page'])){
             $start_limit = ($formData['page'])*$formData['no_of_record'];
-            $shedule_appointment = $allProduct->offset($start_limit)->limit($formData['no_of_record']);
+            $shedule_appointment = $shedule_appointment->offset($start_limit)->limit($formData['no_of_record']);
         }
         $shedule_appointment = $shedule_appointment->get();
      
-
         return Helper::constructResponse(false,'',200,['shedule_appointment'=>$shedule_appointment,'count'=>$count->count()]);
     }
     
