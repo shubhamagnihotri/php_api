@@ -39,7 +39,7 @@ class Question extends Model
     }
 
     public function getQuestionDetails($question_id){        
-        $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id","is_last_question")
+        $ques = Question::select("id","ques_title","ques_option_type","is_sub_question","condition_type","ques_level","gender_id","from_age_condition","to_age_condition","pre_question_id","next_question_id","is_last_question")
                 ->where('id',$question_id)
                 ->first();                    
         return $ques;
