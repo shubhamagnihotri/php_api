@@ -16,8 +16,9 @@ class authUser
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle($request, Closure $next,$role_type)
     {
+        
     
         if(!$request->header('Authorization')){
             return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]]);
@@ -33,6 +34,9 @@ class authUser
             $role = UserRole::select('user_roles.role_id','roles.role_name')->
             join('roles','user_roles.role_id','roles.id')->where('user_id',$user->id)->get();
             $user->role = $role;
+            if($role[0]->role_id != $role_type){
+                return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]], 401);
+            }
             $request->user = $user;
             $request->token = $header[count($header)-1];
         }else{
