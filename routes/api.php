@@ -26,7 +26,8 @@ Route::group(['prefix' =>'v1'], function () {
 Route::group(['prefix' => 'auth'], function () {
     
 Route::post('login', 'API\OnboardingController@login');
-Route::group(['middleware' => ['auth:api','verify.authUser']], function(){
+
+Route::group(['middleware' => ['verify.authUser:2']], function(){
     Route::post('logout', 'API\OnboardingController@logout');
     Route::post('refresh', 'API\OnboardingController@refresh');
 });
@@ -47,7 +48,7 @@ Route::group(['middleware' => ['auth:api','verify.authUser']], function(){
     Route::get('get_countries','API\OnboardingController@getCountries');
     Route::post('get_countries_states','API\OnboardingController@getCountriesStates');
     
-Route::group(['middleware' => ['verify.authUser']], function(){
+Route::group(['middleware' => ['verify.authUser:2']], function(){
     Route::post('update_profile','API\OnboardingController@updateProfile');
     Route::post('change_password','API\OnboardingController@ChangePassword');
     Route::get('userProfile', 'API\OnboardingController@userProfile');
@@ -111,7 +112,7 @@ Route::group(['prefix' => 'admin'], function(){
 
 
 // for admin console apis
-Route::group(['middleware' => ['verify.authUser'],'prefix' => 'admin'], function(){
+Route::group(['middleware' => ['verify.authUser:1'],'prefix' => 'admin'], function(){
     //update profile admin
     Route::post('update_profile','API\OnboardingController@updateProfile');
     Route::post('logout', 'API\OnboardingController@logout');
