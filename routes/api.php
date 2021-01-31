@@ -101,7 +101,7 @@ Route::group(['middleware' => ['verify.authUser:2']], function(){
 //onboarding admin user
 
 Route::group(['prefix' => 'admin'], function(){
-    Route::post('auth/login', 'API\OnboardingController@login');
+    Route::post('auth/login', 'API\OnboardingController@adminLogin');
     Route::post('generate_otp','API\OnboardingController@generateOtp');
     Route::post('validate_otp','API\OnboardingController@validateOtp');
     Route::post('generate_password','API\OnboardingController@generatePassword');

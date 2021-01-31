@@ -160,7 +160,44 @@ class OnboardingController extends Controller
         $userData = $this->createNewToken($token)->original;
         $this->businessLogicServiceObject->updateSessionModel($userData['access_token'],$userData['user']->id);
         $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);
+   
         $userData['user']->role = $role;
+        if($role[0]->role_id != 2){
+            return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]], 400);
+        }
+        return Helper::constructResponse(false,'Login successfully !',200,$userData);
+      
+    }
+
+
+    public function adminLogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
+        ]);       
+        if ($validator->fails()) {
+            return Helper::constructResponse(true,'validation error',400,$validator->errors());
+        }
+        if (! $token = auth()->attempt($validator->validated())) {
+            return Helper::constructResponse(true,'Please enter valid credentials',402,[]);
+            
+        }
+        if(auth()->user()->signup_type == '1'){
+            return Helper::constructResponse(false,'Please login with gmail !',401,[]);
+
+        }
+        if(auth()->user()->signup_type == '2'){
+            return Helper::constructResponse(false,'Please login with facebook !',401,[]);
+        }
+     
+        $userData = $this->createNewToken($token)->original;
+        $this->businessLogicServiceObject->updateSessionModel($userData['access_token'],$userData['user']->id);
+        $role = $this->businessLogicServiceObject->getRoleByuserId($userData['user']->id);
+        $userData['user']->role = $role;
+        if($role[0]->role_id != 1){
+            return response()->json(['error' => true,'message'=>'Unauthorized','status'=>402,'data'=>[]], 400);
+        }
         return Helper::constructResponse(false,'Login successfully !',200,$userData);
       
     }
