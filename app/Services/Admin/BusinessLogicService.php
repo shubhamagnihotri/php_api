@@ -1201,7 +1201,7 @@ class BusinessLogicService
         if($static_page){
            $static= StaticPageLinking::select('page_title','page_content','question_id','option_id')
             ->join('static_pages as sp','sp.id','static_page_linking.static_page_id')->where('static_page_linking.static_page_id',$id)->get();
-            ;
+           
             $response=[];
             if(count($static) > 0){
                 $i=0;
